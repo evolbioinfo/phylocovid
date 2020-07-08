@@ -1,0 +1,53 @@
+import os
+
+# To run locally:
+# snakemake --snakefile Snakefile_figures --keep-going --cores 7  --configfile config.yaml --use-singularity --singularity-prefix ~/.singularity --singularity-args "--home ~"
+
+
+localrules: all
+
+folder = os.path.abspath(config["folder"])
+dates = config["dates"]
+
+rule all:
+    input:
+        expand(os.path.join(folder, '{date}', 'figures', 'Figure{i}.png'), date=dates, i=range(1, 3)),
+
+
+rule fig1:
+    '''
+    Figure 1: declared, sampled and subsampled percentage by country.
+    '''
+    input:
+        tab = os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'),
+    output:
+        png = os.path.join(folder, '{date}', 'figures', 'Figure1.png')
+    threads: 1
+    params:
+        mem = 4000,
+        name = 'metadata',
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/plot_declared_sampled_subsampled_cases.py --tab {input.tab} --png {output.png}
+        """
+
+rule fig2:
+    '''
+    Figure 2: declared and sampled case curves.
+    '''
+    input:
+        tab = os.path.join(folder, '{date}', 'metadata', 'metadata.tab'),
+        cases = os.path.join(folder, 'confirmed_cases.csv'),
+    output:
+        png = os.path.join(folder, '{date}', 'figures', 'Figure2.png')
+    threads: 1
+    params:
+        mem = 4000,
+        name = 'metadata',
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/plot_declared_sampled_curves.py --metadata {input.tab} --cases {input.cases} --date {wildcards.date} \
+        --png {output.png}
+        """
