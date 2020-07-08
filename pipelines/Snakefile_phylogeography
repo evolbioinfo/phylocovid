@@ -15,7 +15,7 @@ from datetime import datetime
 
 
 localrules: all, pastml_itol
-ruleorder: consensus_vis > pastml_vis_tree > pastml_vis > pastml_col
+ruleorder: pastml_vis_tree > pastml_vis > pastml_col
 
 folder = os.path.abspath(config["folder"])
 dates = config["dates"]
@@ -28,6 +28,7 @@ rule all:
         expand(os.path.join(folder, '{date}', 'acr', 'compressed.country.raxfast.lsd2.html'), date=dates),
         expand(os.path.join(folder, '{date}', 'acr', '{type}.country.raxfast_subsampled_{freq}_{i}.lsd2.html'), date=dates, freq=freqs, i=range(N), type=['compressed', 'full']),
         expand(os.path.join(folder, '{date}', 'acr', 'pastml', 'itol_country', 'raxfast_subsampled_{freq}_{i}.lsd2', 'iTOL_url.txt'), date=dates, freq=freqs, i=range(N)),
+        expand(os.path.join(folder, '{date}', 'metadata', 'pastml_country.tab'), date=dates),
 #        expand(os.path.join(folder, '{date}', 'acr', 'compressed.country_{country}.raxfast_subsampled_{freq}_{i}.lsd2.html'), country=['France', 'USA', 'Italy', 'Iceland', 'Germany', 'Russia', 'Singapore'], date=dates, freq=freqs, i=range(N)),
 
 rule pastml_col:
@@ -169,4 +170,29 @@ rule geomap:
     shell:
         """
         geomap --data {input.data} --html {output.geo_map} --location {wildcards.loc} --country iso2
+        """
+
+
+rule pastml_stats:
+    '''
+    Calculates statistics.
+    '''
+    input:
+        freqs = os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_{col}.tab'),
+        pars_pd = expand(os.path.join(folder, '{{date}}', 'acr', 'pastml', '{{col}}', 'raxfast_subsampled_phylogenetic_{i}.lsd2', 'params.character_{{col}}.method_MPPA.model_F81.tab'), i=range(N)),
+        pars_g = expand(os.path.join(folder, '{{date}}', 'acr', 'pastml', '{{col}}', 'raxfast_subsampled_genomic_{i}.lsd2', 'params.character_{{col}}.method_MPPA.model_F81.tab'), i=range(N)),
+    output:
+        stats = os.path.join(folder, '{date}', 'metadata', 'pastml_{col}.tab'),
+    params:
+        mem = 2000,
+        name = 'pastats_{date}',
+        qos = 'fast',
+        labels = ['PD_{}'.format(i) for i in range(N)] + ['G_{}'.format(i) for i in range(N)]
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/pastml_stats.py --freqs {input.freqs} --labels {params.labels} \
+        --pastml_freqs {input.pars_pd} {input.pars_g} --col {wildcards.col} \
+        --output_stats {output.stats}
         """

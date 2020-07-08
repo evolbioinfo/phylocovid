@@ -23,7 +23,7 @@ if __name__ == "__main__":
     plt.clf()
     sns.set(font_scale=2)
     fig, ax = plt.subplots(1, 1)
-    ax = sns.barplot(x='ISO3', y='percentage', hue='type', data=df)
+    ax = sns.barplot(x='ISO3', y='percentage', hue='type', data=df, palette='colorblind')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     fig.set_size_inches(15, 10)
