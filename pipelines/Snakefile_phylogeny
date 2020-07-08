@@ -1,0 +1,321 @@
+import os
+
+# To run locally:
+# snakemake --snakefile Snakefile_phylogeny --keep-going --cores 7  --configfile config.yaml --use-singularity --singularity-prefix ~/.singularity --singularity-args "--home ~"
+
+# To run on bioevo:
+# change shakemake activation below if you are not Anna ;)
+# source /local/gensoft2/exe/conda/3.19.0/conda/bin/activate snakemake && module load singularity/3.5.3
+# snakemake --snakefile Snakefile_phylogeny --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p bioevo --qos=bioevo -A bioevo -J {params.name} -C avx2" --jobs 300
+
+# To visualise the pipeline
+# snakemake --snakefile Snakefile_phylogeny --configfile config.yaml --dag | dot -Tsvg > pipeline_phylogeny.svg
+
+
+localrules: all, upload_to_itol
+ruleorder: collapse_non_informative_branches > prune_sequences_wo_dates > repopulate > root
+
+folder = os.path.abspath(config["folder"])
+dates = config["dates"]
+
+rule all:
+    input:
+        expand(os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.itol'), date=dates)
+
+
+rule dist_matrix:
+    '''
+    Calculates the raw (not normalised) p-dist matrix with goaling
+    '''
+    input:
+        aln = os.path.join(folder, '{date}', 'alignments', 'aln.fa'),
+    output:
+        aln = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.fa'),
+        matrix = os.path.join(folder, '{date}', 'alignments', 'aln.matrix'),
+        length = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.rescale'),
+    params:
+        mem = 60000,
+        name = 'matrix_{date}',
+        qos = 'fast'
+    singularity:
+        "docker://evolbioinfo/goalign:dev"
+    threads: 12
+    shell:
+        """
+        source ~/.bashrc
+        goalign clean sites -c 0.01 -i {input.aln} -o {output.aln} -t {threads}
+        goalign stats length -i {output.aln} > {output.length}
+        goalign compute distance -m rawdist -i {output.aln} --gap-mut 1 -o {output.matrix} -t {threads}
+        """
+
+rule aln_length:
+    '''
+    Calculates alignment length.
+    '''
+    input:
+        aln = os.path.join(folder, '{date}', 'alignments', '{aln}.fa'),
+    output:
+        length = os.path.join(folder, '{date}', 'alignments', '{aln}.length'),
+    singularity:
+        "docker://evolbioinfo/goalign:v0.3.1"
+    params:
+        mem = 2000,
+        name = 'aln_len_{date}',
+        qos = 'fast'
+    threads: 1
+    shell:
+        """
+        goalign stats length -i {input.aln} > {output.length}
+        """
+
+rule raxfast:
+    '''
+    Reconstructs a tree with RAxML-NG starting from a FASTME tree.
+    '''
+    input:
+        aln = os.path.join(folder, '{date}', 'alignments', 'aln.fa'),
+        aln_length = os.path.join(folder, '{date}', 'alignments', 'aln.length'),
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'fastme.nwk'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'raxfast.nwk'),
+        log = os.path.join(folder, '{date}', 'phylogenies', 'raxfast.log'),
+        model = os.path.join(folder, '{date}', 'phylogenies', 'raxfast.model'),
+    threads: 12
+    singularity: "docker://evolbioinfo/raxml-ng:v0.9.0"
+    params:
+        mem = 60000,
+        name = 'raxfast_{date}',
+    shell:
+        """
+        n=`head {input.aln_length}`
+        n=`awk -v n="$n" 'BEGIN {{ m=1/n/10; print m}}'`
+
+        cp {input.aln} {input.aln}.rf
+
+        raxml-ng --model GTR+G6+FO+IO --msa {input.aln}.rf --msa-format FASTA --data-type DNA \
+        --seed 239 --threads {threads} --force --blmin $n --precision 16 --tree {input.tree} --simd avx2
+
+        mv {input.aln}.rf.raxml.bestTree {output.tree}
+        mv {input.aln}.rf.raxml.log {output.log}
+        mv {input.aln}.rf.raxml.bestModel {output.model}
+
+        rm -rf {input.aln}.rf*
+        """
+
+rule repopulate:
+    '''
+    Puts back the duplicated sequences.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+        dup = os.path.join(folder, '{date}', 'alignments', 'duplicates.txt'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.duplicated.nwk'),
+    params:
+        mem = 2000,
+        name = 'repopulate_{tree}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/gotree:v0.4.0"
+    shell:
+        """
+        gotree repopulate -i {input.tree} -g {input.dup} -o {output.tree}
+        """
+
+rule fastme:
+    '''
+    Reconstructs a tree with FASTME.
+    '''
+    input:
+        matrix = os.path.join(folder, '{date}', 'alignments', 'aln.matrix'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'fastme.scaled.nwk'),
+        log = os.path.join(folder, '{date}', 'phylogenies', 'fastme.log'),
+    threads: 12
+    singularity: "docker://evolbioinfo/fastme:v2.1.6.1"
+    params:
+        mem = 60000,
+        name='fastme_{date}',
+    shell:
+        """
+        fastme  -i {input.matrix}  -o {output.tree} -m BIONJ -g -n  -s  -z 239 -f 16 -T {threads}
+        mv {input.matrix}_fastme_stat.txt {output.log}
+        sed -i 's/:-0.[0-9]\\+/:0/g' {output.tree}
+        """
+
+rule rescale:
+    '''
+    Rescales branch lengths by a certain factor.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'fastme.scaled.nwk'),
+        length = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.rescale'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'fastme.nwk'),
+    threads: 1
+    params:
+        mem = 500,
+        name='rescale_fastme_{date}',
+        qos = 'fast'
+    singularity: "docker://evolbioinfo/gotree:v0.3.0b"
+    shell:
+        """
+        n=`head {input.length}`
+        s=`awk -v n="$n" 'BEGIN {{ m=1/n; print m}}'`
+        b=`awk -v n="$n" 'BEGIN {{ m=1/n/2; print m}}'`
+
+        gotree brlen scale -i {input.tree} -f $s | gotree brlen setmin -l $b -o {output.tree}
+        """
+
+rule prune_sequences_wo_dates:
+    '''
+    Keep only tips that have date annotations
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+        ids = os.path.join(folder, '{date}', 'metadata', 'dated.ids'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.has_dates.nwk'),
+    params:
+        mem = 2000,
+        name = 'has_dates_{tree}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/gotree:v0.3.0b"
+    shell:
+        """
+        gotree prune -i {input.tree} -f {input.ids} -r -o {output.tree}
+        """
+
+rule collapse_non_informative_branches:
+    '''
+    Collapse internal branches of length <= 1/2 mut, set external branches of length <= 1/2 mut/site to zero.
+    If the tree is rooted and a root child branch is to be collapsed, set it to zero instead (to keep the tree rooted).
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+        length = os.path.join(folder, '{date}', 'alignments', 'aln.length'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.collapsed.nwk'),
+    params:
+        mem = 2000,
+        name = 'collapse_{tree}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        n=`head {input.length}`
+        l=`awk -v n="$n" 'BEGIN {{ m=1/n/2; print m}}'`
+
+        python3 py/collapse.py --input_tree {input.tree} --output_tree {output.tree} --threshold $l --feature dist
+        """
+
+rule root:
+    '''
+    Rooted the tree on the extremity (dist=0 from MRCA) of the branch separating
+    the MRCA of the sequences from [Li et al. 2020 http://arxiv.org/abs/2003.05580] and their duplicates.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+        og = os.path.join(folder, 'outgroup.txt'),
+        dup = os.path.join(folder, '{date}', 'alignments', 'duplicates.txt'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_{tree}.nwk'),
+    params:
+        mem = 2000,
+        name = 'root_{tree}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/preroot.py --in_tree {input.tree} --out_tree {output.tree} \
+        --outgroup {input.og} --duplicates {input.dup}
+        """
+
+rule detect_outliers_z_score:
+    '''
+    Detects outliers in a tree based on the z-score (more than 3)
+    of their rate (num of mutations from the root / time since the first sequence).
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_{tree}.nwk'),
+        dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates'),
+    output:
+        outliers = os.path.join(folder, '{date}', 'timetrees', '{tree}.zscore.outliers'),
+        log = os.path.join(folder, '{date}', 'timetrees', '{tree}.zscore.log'),
+    threads: 1
+    params:
+        mem = 4000,
+        name = 'outliers_zscore_{date}',
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/detect_outliers.py --tree {input.tree} --dates {input.dates} \
+        --ids {output.outliers} --log {output.log} --threshold 3
+        """
+
+rule rm_outliers:
+    '''
+    Removes the outliers.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_{tree}.nwk'),
+        outliers = os.path.join(folder, '{date}', 'timetrees', '{tree}.{type}.outliers'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_{tree}.{type,zscore|lsd2}.no_outliers.nwk'),
+    singularity: "docker://evolbioinfo/gotree:v0.3.0b"
+    params:
+        mem = 2000,
+        name = 'outliers_rm_{date}',
+        qos = 'fast'
+    threads: 1
+    shell:
+        """
+        gotree prune -i {input.tree} -f {input.outliers} -o {output.tree}
+        """
+
+rule upload_to_itol:
+    '''
+    Uploads a tree to iTOL.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+    output:
+        log = os.path.join(folder, '{date}', 'phylogenies', '{tree}.itol'),
+    singularity:
+        "docker://evolbioinfo/gotree:v0.3.0b"
+    params:
+        mem = 2000,
+        name = 'itol_{tree}_{date}',
+        qos = 'fast',
+        tree_name = '{date}_{tree}'
+    threads: 1
+    shell:
+        """
+        gotree upload itol -i {input.tree} --project phylocovid --user-id ZxuhG2okfKLQnsgd5xAEGQ \
+        --name "{params.tree_name}" > {output.log}
+        """
+
+rule matching_metadata:
+    '''
+    Extract metadata that corresponds to the tree ids.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+        locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
+        dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates'),
+    output:
+        tab = os.path.join(folder, '{date}', 'metadata', '{tree}.metadata.tab')
+    threads: 1
+    params:
+        mem = 4000,
+        name = 'metadata_{tree}_{date}',
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.2"
+    shell:
+        """
+        python3 py/submetadata.py --input_tree {input.tree} \
+        --input_locs {input.locs} --input_dates {input.dates} \
+        --output_tab {output.tab}
+        """

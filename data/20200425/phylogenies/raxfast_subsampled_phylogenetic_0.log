@@ -1,0 +1,111 @@
+
+RAxML-NG v. 0.9.0 released on 20.05.2019 by The Exelixis Lab.
+Developed by: Alexey M. Kozlov and Alexandros Stamatakis.
+Contributors: Diego Darriba, Tomas Flouri, Benoit Morel, Sarah Lutteropp, Ben Bettisworth.
+Latest version: https://github.com/amkozlov/raxml-ng
+Questions/problems/suggestions? Please visit: https://groups.google.com/forum/#!forum/raxml
+
+RAxML-NG was called at 10-Jun-2020 16:27:38 as follows:
+
+raxml-ng --model GTR+G6+FO+IO --msa /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_0.fa --msa-format FASTA --data-type DNA --seed 239 --threads 12 --force --blmin 3.36406e-06 --precision 16 --tree /pasteur/entites/Bioevo/sars-cov2-data/20200425/phylogenies/raxfast_subsampled_phylogenetic_0.start.nwk --simd avx2
+
+Analysis options:
+  run mode: ML tree search
+  start tree(s): user
+  random seed: 239
+  tip-inner: OFF
+  pattern compression: ON
+  per-rate scalers: OFF
+  site repeats: ON
+  fast spr radius: AUTO
+  spr subtree cutoff: 1.000000
+  branch lengths: proportional (ML estimate, algorithm: NR-FAST)
+  SIMD kernels: AVX2
+  parallelization: PTHREADS (12 threads), thread pinning: OFF
+
+WARNING: Running in FORCE mode: all safety checks are disabled!
+
+[00:00:00] Reading alignment from file: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_0.fa
+[00:00:00] Loaded alignment with 1715 taxa and 29726 sites
+
+Alignment comprises 1 partitions and 11197 patterns
+
+Partition 0: noname
+Model: GTR+FO+I+G6m
+Alignment sites / patterns: 29726 / 11197
+Gaps: 0.53 %
+Invariant sites: 89.60 %
+
+
+NOTE: Binary MSA file created: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_0.fa.raxml.rba
+
+[00:00:02] Loading user starting tree(s) from: /pasteur/entites/Bioevo/sars-cov2-data/20200425/phylogenies/raxfast_subsampled_phylogenetic_0.start.nwk
+[00:00:02] Data distribution: max. partitions/sites/weight per thread: 1 / 934 / 22416
+
+Starting ML tree search with 1 distinct starting trees
+
+[00:00:02 -84178.1413512933504535] Initial branch length optimization
+[00:00:04 -83987.2274866344523616] Model parameter optimization (eps = 10.0000000000000000)
+[00:00:26 -81048.2468609834904782] AUTODETECT spr round 1 (radius: 5)
+[00:02:20 -80930.3366358599159867] AUTODETECT spr round 2 (radius: 10)
+[00:05:02 -80879.8422520213644020] AUTODETECT spr round 3 (radius: 15)
+[00:08:45 -80831.1052259176503867] AUTODETECT spr round 4 (radius: 20)
+[00:13:29 -80725.1211365322815254] AUTODETECT spr round 5 (radius: 25)
+[00:19:19 -80622.5538380251673516] SPR radius for FAST iterations: 25 (autodetect)
+[00:19:19 -80622.5538380251673516] Model parameter optimization (eps = 3.0000000000000000)
+[00:19:25 -80621.0143351798324147] FAST spr round 1 (radius: 25)
+[00:32:51 -80462.5639861620729789] FAST spr round 2 (radius: 25)
+[00:42:05 -80411.4069759064441314] FAST spr round 3 (radius: 25)
+[00:48:52 -80411.2941286620334722] FAST spr round 4 (radius: 25)
+[00:53:11 -80411.1941296216245973] Model parameter optimization (eps = 1.0000000000000000)
+[00:53:17 -80410.9162924146658042] SLOW spr round 1 (radius: 5)
+[00:57:12 -80410.4929697044717614] SLOW spr round 2 (radius: 5)
+[01:00:57 -80410.4929697044717614] SLOW spr round 3 (radius: 10)
+[01:06:05 -80409.8332088366150856] SLOW spr round 4 (radius: 5)
+[01:09:52 -80409.7513473348953994] SLOW spr round 5 (radius: 10)
+[01:14:50 -80409.7389486669562757] SLOW spr round 6 (radius: 15)
+[01:20:39 -80409.4551474388281349] SLOW spr round 7 (radius: 5)
+[01:24:32 -80409.3996467417455278] SLOW spr round 8 (radius: 10)
+[01:29:32 -80409.2702840598212788] SLOW spr round 9 (radius: 5)
+[01:33:16 -80409.2702840598212788] SLOW spr round 10 (radius: 10)
+[01:38:13 -80409.2538564210553886] SLOW spr round 11 (radius: 15)
+[01:43:59 -80409.1370018534798874] SLOW spr round 12 (radius: 5)
+[01:47:50 -80409.1369198686152231] SLOW spr round 13 (radius: 10)
+[01:52:49 -80409.0643050731887342] SLOW spr round 14 (radius: 15)
+[01:58:33 -80409.0369863882951904] SLOW spr round 15 (radius: 20)
+[02:05:19 -80408.9834060315333772] SLOW spr round 16 (radius: 25)
+[02:15:03 -80408.8055357734265272] SLOW spr round 17 (radius: 5)
+[02:19:27 -80395.2326590937445872] SLOW spr round 18 (radius: 5)
+[02:23:12 -80379.3405231018987251] SLOW spr round 19 (radius: 5)
+[02:26:54 -80379.3405231018987251] SLOW spr round 20 (radius: 10)
+[02:32:03 -80379.3405231018987251] SLOW spr round 21 (radius: 15)
+[02:38:18 -80379.3290533069812227] SLOW spr round 22 (radius: 20)
+[02:45:39 -80379.2291358337970451] SLOW spr round 23 (radius: 25)
+[02:55:09 -80379.2260254397842800] Model parameter optimization (eps = 0.1000000000000000)
+
+[02:55:14] ML tree search #1, logLikelihood: -80379.2142813229438616
+
+
+Optimized model parameters:
+
+   Partition 0: noname
+   Rate heterogeneity: GAMMA (6 cats, mean),  alpha: 0.8756104501687727 (ML),  weights&rates: (0.1666666666666667,0.0682266961164854) (0.1666666666666667,0.2515073455885968) (0.1666666666666667,0.5013669577709045) (0.1666666666666667,0.8515834832966986) (0.1666666666666667,1.4066513940684366) (0.1666666666666667,2.9206641231588781) 
+   P-inv (ML): 0.4747244302795917
+   Base frequencies (ML): 0.2977241189276197 0.1733081999919491 0.1903020653422348 0.3386656157381965 
+   Substitution rates (ML): 0.2791229609276940 1.0965147804074804 0.2463293634258865 0.2557122395483502 3.0221179890705860 1.0000000000000000 
+
+
+Final LogLikelihood: -80379.2142813229438616
+
+AIC score: 167632.4285626458877232 / AICc score: 168531.4247586288547609 / BIC score: 196158.7633582761627622
+Free parameters (model + branch lengths): 3437
+
+Best ML tree saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_0.fa.raxml.bestTree
+Optimized model saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_0.fa.raxml.bestModel
+
+Execution log saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_0.fa.raxml.log
+
+Analysis started: 10-Jun-2020 16:27:38 / finished: 10-Jun-2020 19:22:53
+
+Elapsed time: 10514.719 seconds
+

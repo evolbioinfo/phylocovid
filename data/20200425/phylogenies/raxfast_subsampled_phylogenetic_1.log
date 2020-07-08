@@ -1,0 +1,115 @@
+
+RAxML-NG v. 0.9.0 released on 20.05.2019 by The Exelixis Lab.
+Developed by: Alexey M. Kozlov and Alexandros Stamatakis.
+Contributors: Diego Darriba, Tomas Flouri, Benoit Morel, Sarah Lutteropp, Ben Bettisworth.
+Latest version: https://github.com/amkozlov/raxml-ng
+Questions/problems/suggestions? Please visit: https://groups.google.com/forum/#!forum/raxml
+
+RAxML-NG was called at 10-Jun-2020 16:27:33 as follows:
+
+raxml-ng --model GTR+G6+FO+IO --msa /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_1.fa --msa-format FASTA --data-type DNA --seed 239 --threads 12 --force --blmin 3.36406e-06 --precision 16 --tree /pasteur/entites/Bioevo/sars-cov2-data/20200425/phylogenies/raxfast_subsampled_phylogenetic_1.start.nwk --simd avx2
+
+Analysis options:
+  run mode: ML tree search
+  start tree(s): user
+  random seed: 239
+  tip-inner: OFF
+  pattern compression: ON
+  per-rate scalers: OFF
+  site repeats: ON
+  fast spr radius: AUTO
+  spr subtree cutoff: 1.000000
+  branch lengths: proportional (ML estimate, algorithm: NR-FAST)
+  SIMD kernels: AVX2
+  parallelization: PTHREADS (12 threads), thread pinning: OFF
+
+WARNING: Running in FORCE mode: all safety checks are disabled!
+
+[00:00:00] Reading alignment from file: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_1.fa
+[00:00:00] Loaded alignment with 1715 taxa and 29726 sites
+
+Alignment comprises 1 partitions and 11221 patterns
+
+Partition 0: noname
+Model: GTR+FO+I+G6m
+Alignment sites / patterns: 29726 / 11221
+Gaps: 0.53 %
+Invariant sites: 89.58 %
+
+
+NOTE: Binary MSA file created: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_1.fa.raxml.rba
+
+[00:00:01] Loading user starting tree(s) from: /pasteur/entites/Bioevo/sars-cov2-data/20200425/phylogenies/raxfast_subsampled_phylogenetic_1.start.nwk
+[00:00:02] Data distribution: max. partitions/sites/weight per thread: 1 / 936 / 22464
+
+Starting ML tree search with 1 distinct starting trees
+
+[00:00:02 -84171.7599359099112917] Initial branch length optimization
+[00:00:04 -83980.0418925338599365] Model parameter optimization (eps = 10.0000000000000000)
+[00:00:27 -81042.0851289482234279] AUTODETECT spr round 1 (radius: 5)
+[00:02:17 -80924.1338470311602578] AUTODETECT spr round 2 (radius: 10)
+[00:04:55 -80868.0555180029623443] AUTODETECT spr round 3 (radius: 15)
+[00:08:51 -80804.1526541959174210] AUTODETECT spr round 4 (radius: 20)
+[00:15:41 -80738.3302378004882485] AUTODETECT spr round 5 (radius: 25)
+[00:25:32 -80651.4934480365191121] SPR radius for FAST iterations: 25 (autodetect)
+[00:25:32 -80651.4934480365191121] Model parameter optimization (eps = 3.0000000000000000)
+[00:25:42 -80650.1598248548689298] FAST spr round 1 (radius: 25)
+[00:45:11 -80447.0487848275079159] FAST spr round 2 (radius: 25)
+[00:58:33 -80373.6833649237814825] FAST spr round 3 (radius: 25)
+[01:08:22 -80373.5343097042059526] FAST spr round 4 (radius: 25)
+[01:15:06 -80373.4332688504946418] FAST spr round 5 (radius: 25)
+[01:21:30 -80373.3790198069182225] Model parameter optimization (eps = 1.0000000000000000)
+[01:21:41 -80372.9229724415054079] SLOW spr round 1 (radius: 5)
+[01:27:06 -80372.5852617931232089] SLOW spr round 2 (radius: 5)
+[01:32:23 -80372.5397897468064912] SLOW spr round 3 (radius: 10)
+[01:39:13 -80371.9084746344306041] SLOW spr round 4 (radius: 5)
+[01:44:27 -80371.8774497589183738] SLOW spr round 5 (radius: 10)
+[01:51:11 -80371.8372106221650029] SLOW spr round 6 (radius: 15)
+[01:59:01 -80371.6070197218214162] SLOW spr round 7 (radius: 5)
+[02:04:18 -80371.6068415970803471] SLOW spr round 8 (radius: 10)
+[02:10:56 -80371.6067948736890685] SLOW spr round 9 (radius: 15)
+[02:18:47 -80371.4388722283911193] SLOW spr round 10 (radius: 5)
+[02:24:02 -80371.4388667707098648] SLOW spr round 11 (radius: 10)
+[02:30:41 -80371.4388667707098648] SLOW spr round 12 (radius: 15)
+[02:38:27 -80371.3849020653287880] SLOW spr round 13 (radius: 20)
+[02:47:24 -80370.9837423897406552] SLOW spr round 14 (radius: 5)
+[02:53:06 -80370.9835808389034355] SLOW spr round 15 (radius: 10)
+[02:59:46 -80370.9664484306122176] SLOW spr round 16 (radius: 15)
+[03:07:08 -80370.9419025861425325] SLOW spr round 17 (radius: 20)
+[03:15:32 -80370.9256015775026754] SLOW spr round 18 (radius: 25)
+[03:26:45 -80368.8279860792681575] SLOW spr round 19 (radius: 5)
+[03:32:08 -80368.8279860792681575] SLOW spr round 20 (radius: 10)
+[03:38:21 -80368.8279860792681575] SLOW spr round 21 (radius: 15)
+[03:45:42 -80368.4317379261192400] SLOW spr round 22 (radius: 5)
+[03:50:35 -80368.4266670920187607] SLOW spr round 23 (radius: 10)
+[03:56:45 -80368.4266670920187607] SLOW spr round 24 (radius: 15)
+[04:04:00 -80368.4266670920187607] SLOW spr round 25 (radius: 20)
+[04:12:10 -80368.4266670920187607] SLOW spr round 26 (radius: 25)
+[04:22:58 -80368.4266670920187607] Model parameter optimization (eps = 0.1000000000000000)
+
+[04:23:09] ML tree search #1, logLikelihood: -80368.4004468240891583
+
+
+Optimized model parameters:
+
+   Partition 0: noname
+   Rate heterogeneity: GAMMA (6 cats, mean),  alpha: 0.8707028850416828 (ML),  weights&rates: (0.1666666666666667,0.0674345584422399) (0.1666666666666667,0.2498991438923535) (0.1666666666666667,0.4995753524929491) (0.1666666666666667,0.8501923404839959) (0.1666666666666667,1.4066158160364668) (0.1666666666666667,2.9262827886519949) 
+   P-inv (ML): 0.4729113338357713
+   Base frequencies (ML): 0.2976873852585424 0.1733124110701610 0.1902669518920587 0.3387332517792379 
+   Substitution rates (ML): 0.2815293751737410 1.0932862523382296 0.2467239081350723 0.2540194529232611 3.0364871914247855 1.0000000000000000 
+
+
+Final LogLikelihood: -80368.4004468240891583
+
+AIC score: 167610.8008936481783167 / AICc score: 168509.7970896311453544 / BIC score: 196137.1356892784533557
+Free parameters (model + branch lengths): 3437
+
+Best ML tree saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_1.fa.raxml.bestTree
+Optimized model saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_1.fa.raxml.bestModel
+
+Execution log saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/subsampled_phylogenetic_1.fa.raxml.log
+
+Analysis started: 10-Jun-2020 16:27:33 / finished: 10-Jun-2020 20:50:42
+
+Elapsed time: 15789.534 seconds
+

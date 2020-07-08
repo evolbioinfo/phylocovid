@@ -1,0 +1,157 @@
+
+RAxML-NG v. 0.9.0 released on 20.05.2019 by The Exelixis Lab.
+Developed by: Alexey M. Kozlov and Alexandros Stamatakis.
+Contributors: Diego Darriba, Tomas Flouri, Benoit Morel, Sarah Lutteropp, Ben Bettisworth.
+Latest version: https://github.com/amkozlov/raxml-ng
+Questions/problems/suggestions? Please visit: https://groups.google.com/forum/#!forum/raxml
+
+RAxML-NG was called at 28-Apr-2020 09:22:56 as follows:
+
+raxml-ng --model GTR+G6+FO+IO --msa /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/aln.fa.rf --msa-format FASTA --data-type DNA --seed 239 --threads 12 --force --blmin 3.36406e-06 --precision 16 --tree /pasteur/entites/Bioevo/sars-cov2-data/20200425/phylogenies/fastme.nwk --simd avx2
+
+Analysis options:
+  run mode: ML tree search
+  start tree(s): user
+  random seed: 239
+  tip-inner: OFF
+  pattern compression: ON
+  per-rate scalers: OFF
+  site repeats: ON
+  fast spr radius: AUTO
+  spr subtree cutoff: 1.000000
+  branch lengths: proportional (ML estimate, algorithm: NR-FAST)
+  SIMD kernels: AVX2
+  parallelization: PTHREADS (12 threads), thread pinning: OFF
+
+WARNING: Running in FORCE mode: all safety checks are disabled!
+
+[00:00:00] Reading alignment from file: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/aln.fa.rf
+[00:00:01] Loaded alignment with 8541 taxa and 29726 sites
+
+Alignment comprises 1 partitions and 19841 patterns
+
+Partition 0: noname
+Model: GTR+FO+I+G6m
+Alignment sites / patterns: 29726 / 19841
+Gaps: 0.77 %
+Invariant sites: 78.83 %
+
+
+NOTE: Binary MSA file created: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/aln.fa.rf.raxml.rba
+
+
+NOTE: Per-rate scalers were automatically enabled to prevent numerical issues on taxa-rich alignments.
+NOTE: You can use --force switch to skip this check and fall back to per-site scalers.
+
+[00:00:11] Loading user starting tree(s) from: /pasteur/entites/Bioevo/sars-cov2-data/20200425/phylogenies/fastme.nwk
+[00:00:11] Data distribution: max. partitions/sites/weight per thread: 1 / 1654 / 39696
+
+Starting ML tree search with 1 distinct starting trees
+
+[00:00:15 -154434.5791621130192652] Initial branch length optimization
+[00:00:34 -147087.7532543426787015] Model parameter optimization (eps = 10.0000000000000000)
+[00:02:58 -140810.8857061383314431] AUTODETECT spr round 1 (radius: 5)
+[00:45:03 -138081.1881265992124099] AUTODETECT spr round 2 (radius: 10)
+[01:51:33 -137512.4972273317398503] AUTODETECT spr round 3 (radius: 15)
+[03:17:48 -136972.3150976424512919] AUTODETECT spr round 4 (radius: 20)
+[05:10:28 -136488.4593511424027383] AUTODETECT spr round 5 (radius: 25)
+[07:29:55 -136211.5549869439273607] SPR radius for FAST iterations: 25 (autodetect)
+[07:29:55 -136211.5549869439273607] Model parameter optimization (eps = 3.0000000000000000)
+[07:31:33 -136173.8370368744363077] FAST spr round 1 (radius: 25)
+[11:40:42 -135865.5933311720727943] FAST spr round 2 (radius: 25)
+[14:35:38 -135805.5978901314956602] FAST spr round 3 (radius: 25)
+[16:48:35 -135747.2614557402557693] FAST spr round 4 (radius: 25)
+[18:32:37 -135745.4183902160730213] FAST spr round 5 (radius: 25)
+[20:13:47 -135745.4104780290508643] Model parameter optimization (eps = 1.0000000000000000)
+[20:14:36 -135744.9528673179156613] SLOW spr round 1 (radius: 5)
+[21:29:31 -135743.0100046260922682] SLOW spr round 2 (radius: 5)
+[22:41:52 -135743.0089144353987649] SLOW spr round 3 (radius: 10)
+[24:11:46 -135741.5075368247926235] SLOW spr round 4 (radius: 5)
+[25:26:48 -135741.2685347139777150] SLOW spr round 5 (radius: 5)
+[26:39:27 -135741.2403122917166911] SLOW spr round 6 (radius: 10)
+[28:10:01 -135741.1304039836104494] SLOW spr round 7 (radius: 5)
+[29:22:21 -135741.1304039836104494] SLOW spr round 8 (radius: 10)
+[30:54:33 -135741.0552501294878311] SLOW spr round 9 (radius: 15)
+[32:46:53 -135740.2132512053940445] SLOW spr round 10 (radius: 5)
+[34:05:19 -135740.1448813776369207] SLOW spr round 11 (radius: 10)
+[35:34:36 -135740.1153835311124567] SLOW spr round 12 (radius: 15)
+[37:27:04 -135739.7233495711407159] SLOW spr round 13 (radius: 5)
+[38:39:28 -135739.6340404289658181] SLOW spr round 14 (radius: 10)
+[40:08:34 -135739.6340404289658181] SLOW spr round 15 (radius: 15)
+[42:00:24 -135739.5330033766513225] SLOW spr round 16 (radius: 5)
+[43:13:34 -135739.5329930261359550] SLOW spr round 17 (radius: 10)
+[44:42:39 -135739.5329930261359550] SLOW spr round 18 (radius: 15)
+[46:33:32 -135739.4436250838334672] SLOW spr round 19 (radius: 20)
+[48:46:37 -135738.7838472605508287] SLOW spr round 20 (radius: 5)
+[50:05:56 -135738.3671329702774528] SLOW spr round 21 (radius: 5)
+[51:22:07 -135738.2738932592328638] SLOW spr round 22 (radius: 10)
+[52:52:49 -135738.0521251218451653] SLOW spr round 23 (radius: 5)
+[54:07:05 -135738.0521142024372239] SLOW spr round 24 (radius: 10)
+[55:38:51 -135738.0521142024372239] SLOW spr round 25 (radius: 15)
+[57:32:47 -135738.0074734257941600] SLOW spr round 26 (radius: 20)
+[59:45:47 -135737.9564161075395532] SLOW spr round 27 (radius: 25)
+[62:45:51 -135734.5453534951666370] SLOW spr round 28 (radius: 5)
+[64:06:36 -135734.4219880026357714] SLOW spr round 29 (radius: 5)
+[65:20:37 -135734.4219880026066676] SLOW spr round 30 (radius: 10)
+[66:52:55 -135734.0577374732820317] SLOW spr round 31 (radius: 5)
+[68:08:15 -135733.9626198597834446] SLOW spr round 32 (radius: 10)
+[69:38:55 -135733.9626198597834446] SLOW spr round 33 (radius: 15)
+[71:32:18 -135733.9612673292576801] SLOW spr round 34 (radius: 20)
+[73:46:54 -135718.6662450428411830] SLOW spr round 35 (radius: 5)
+[75:06:03 -135717.7389138730650302] SLOW spr round 36 (radius: 5)
+[76:21:04 -135717.6498735847417265] SLOW spr round 37 (radius: 10)
+[77:52:39 -135717.3703814879409038] SLOW spr round 38 (radius: 5)
+[79:06:41 -135717.3703733714355621] SLOW spr round 39 (radius: 10)
+[80:36:56 -135717.3703733714355621] SLOW spr round 40 (radius: 15)
+[82:29:48 -135710.2315730876871385] SLOW spr round 41 (radius: 5)
+[83:43:16 -135710.2315051106852479] SLOW spr round 42 (radius: 10)
+[85:12:47 -135710.2315051106852479] SLOW spr round 43 (radius: 15)
+[87:04:32 -135710.2315051106852479] SLOW spr round 44 (radius: 20)
+[89:20:12 -135707.7040883667941671] SLOW spr round 45 (radius: 5)
+[90:36:59 -135700.3196151546144392] SLOW spr round 46 (radius: 5)
+[91:50:12 -135700.1232399572909344] SLOW spr round 47 (radius: 5)
+[93:02:31 -135700.1056424003327265] SLOW spr round 48 (radius: 10)
+[94:31:49 -135700.0291872338857502] SLOW spr round 49 (radius: 15)
+[96:24:20 -135699.8357582176686265] SLOW spr round 50 (radius: 5)
+[97:37:34 -135699.6691940539749339] SLOW spr round 51 (radius: 5)
+[98:49:59 -135699.6691926780331414] SLOW spr round 52 (radius: 10)
+[100:19:20 -135699.5798139930702746] SLOW spr round 53 (radius: 15)
+[102:14:45 -135699.5798127839225344] SLOW spr round 54 (radius: 20)
+[104:32:51 -135699.3991656866273843] SLOW spr round 55 (radius: 5)
+[105:51:13 -135699.3971501683699898] SLOW spr round 56 (radius: 10)
+[107:24:03 -135699.3971430842939299] SLOW spr round 57 (radius: 15)
+[109:20:08 -135699.3869783314876258] SLOW spr round 58 (radius: 20)
+[111:37:07 -135699.3717746546899434] SLOW spr round 59 (radius: 25)
+[114:35:54 -135692.5420678455557209] SLOW spr round 60 (radius: 5)
+[115:56:42 -135692.5420612607267685] SLOW spr round 61 (radius: 10)
+[117:29:28 -135692.5420612607267685] SLOW spr round 62 (radius: 15)
+[119:24:38 -135692.5315110218070913] SLOW spr round 63 (radius: 20)
+[121:41:18 -135692.5315110218070913] SLOW spr round 64 (radius: 25)
+[124:35:57 -135692.5240754313126672] Model parameter optimization (eps = 0.1000000000000000)
+
+[124:37:29] ML tree search #1, logLikelihood: -135691.7496790400182363
+
+
+Optimized model parameters:
+
+   Partition 0: noname
+   Rate heterogeneity: GAMMA (6 cats, mean),  alpha: 0.7549727143795085 (ML),  weights&rates: (0.1666666666666667,0.0490651334489097) (0.1666666666666667,0.2096377169584619) (0.1666666666666667,0.4527501293059887) (0.1666666666666667,0.8121847727980761) (0.1666666666666667,1.4030531773538679) (0.1666666666666667,3.0733090701346959) 
+   P-inv (ML): 0.4257905265372036
+   Base frequencies (ML): 0.2925781580345308 0.1726810710383893 0.1847688206964929 0.3499719502305870 
+   Substitution rates (ML): 0.1786255867492178 0.8026456617945379 0.1542259567393564 0.1809591911655226 2.6716909711589452 1.0000000000000000 
+
+
+Final LogLikelihood: -135691.7496790400182363
+
+AIC score: 305561.4993580800364725 / AICc score: 351786.7304438666906208 / BIC score: 447396.3947094114264473
+Free parameters (model + branch lengths): 17089
+
+Best ML tree saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/aln.fa.rf.raxml.bestTree
+Optimized model saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/aln.fa.rf.raxml.bestModel
+
+Execution log saved to: /pasteur/entites/Bioevo/sars-cov2-data/20200425/alignments/aln.fa.rf.raxml.log
+
+Analysis started: 28-Apr-2020 09:22:56 / finished: 03-May-2020 14:00:26
+
+Elapsed time: 448650.210 seconds
+

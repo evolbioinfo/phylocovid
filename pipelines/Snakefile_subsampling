@@ -1,0 +1,418 @@
+import os
+
+# To run locally:
+# snakemake --snakefile Snakefile_subsampling --keep-going --cores 7 --configfile config.yaml --use-singularity --singularity-prefix ~/.singularity --singularity-args "--home ~"
+
+# To run on bioevo:
+# change shakemake activation below if you are not Anna ;)
+# source /local/gensoft2/exe/conda/3.19.0/conda/bin/activate snakemake && module load singularity/3.5.3
+# snakemake --snakefile Snakefile_subsampling --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p bioevo --qos=bioevo -A bioevo -J {params.name}" --jobs 300
+# to run on common:
+# snakemake --snakefile Snakefile_subsampling --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p common --qos=normal -A bioevo -J {params.name} -C avx2" --jobs 300
+
+
+# To visualise the pipeline
+# snakemake --snakefile Snakefile_subsampling --configfile config.yaml --dag | dot -Tsvg > pipeline_subsampling.svg
+
+
+localrules: all
+
+folder = os.path.abspath(config["folder"])
+dates = config["dates"]
+
+N = 5
+SIZE = 2000
+freqs = ['phylogenetic', 'genomic']
+
+rule all:
+    input:
+         expand(os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.nwk'), i=range(N), date=dates, freq=freqs),
+         expand(os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'), date=dates),
+         expand(os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_country.tab'), date=dates),
+
+
+rule aln_for_ids:
+    ''' Get alignment corresponding to the ids '''
+    input:
+        ids = os.path.join(folder, '{date}', 'metadata', '{ids}.ids'),
+        aln = os.path.join(folder, '{date}', 'alignments', 'aln.fa'),
+        dups = os.path.join(folder, '{date}', 'alignments', 'duplicates.txt'),
+    output:
+        aln = os.path.join(folder, '{date}', 'alignments', '{ids}.fa'),
+        dups = os.path.join(folder, '{date}', 'alignments', '{ids}.duplicates'),
+    params:
+        mem = 30000,
+        name = 'subaln_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/subaln.py --ids {input.ids} \
+        --in_aln {input.aln} --in_duplicates {input.dups}  --out_duplicates {output.dups} \
+        --out_aln {output.aln}
+        """
+
+rule aln_length:
+    '''
+    Calculates alignment length.
+    '''
+    input:
+        aln = os.path.join(folder, '{date}', 'alignments', '{aln}.fa'),
+    output:
+        length = os.path.join(folder, '{date}', 'alignments', '{aln}.length'),
+    singularity:
+        "docker://evolbioinfo/goalign:v0.3.1"
+    params:
+        mem = 2000,
+        name = 'aln_len_{date}',
+        qos = 'fast'
+    threads: 1
+    shell:
+        """
+        goalign stats length -i {input.aln} > {output.length}
+        """
+
+rule raxfast:
+    '''
+    Reconstructs a tree with RAxML-NG.
+    '''
+    input:
+        aln = os.path.join(folder, '{date}', 'alignments', 'subsampled_{freq}_{i}.fa'),
+        aln_length = os.path.join(folder, '{date}', 'alignments', 'subsampled_{freq}_{i}.length'),
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'raxfast_subsampled_{freq}_{i}.start.nwk'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'raxfast_subsampled_{freq}_{i}.nwk'),
+        log = os.path.join(folder, '{date}', 'phylogenies', 'raxfast_subsampled_{freq}_{i}.log'),
+        model = os.path.join(folder, '{date}', 'phylogenies', 'raxfast_subsampled_{freq}_{i}.model'),
+    threads: 12
+    singularity: "docker://evolbioinfo/raxml-ng:v0.9.0"
+    params:
+        mem = 60000,
+        name = 'raxfast_{date}',
+    shell:
+        """
+        n=`head {input.aln_length}`
+        n=`awk -v n="$n" 'BEGIN {{ m=1/n/10; print m}}'`
+
+        raxml-ng --model GTR+G6+FO+IO --msa {input.aln} --msa-format FASTA --data-type DNA \
+        --seed 239 --threads {threads} --force --blmin $n --precision 16 --tree {input.tree} --simd avx2
+
+        mv {input.aln}.raxml.bestTree {output.tree}
+        mv {input.aln}.raxml.log {output.log}
+        mv {input.aln}.raxml.bestModel {output.model}
+
+        rm -rf {input.aln}.raxml*
+        """
+
+rule start_tree:
+    '''
+    Creates a start tree from the pruned tree
+    '''
+    input:
+        dups = os.path.join(folder, '{date}', 'alignments', 'duplicates.txt'),
+        aln = os.path.join(folder, '{date}', 'alignments', '{ids}.fa'),
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'raxfast.nwk'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'raxfast_{ids}.start.nwk'),
+    params:
+        mem = 2000,
+        name = 'start_tree_{ids}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/start_tree.py --aln {input.aln} \
+        --in_tree {input.tree} --duplicates {input.dups}  --out_tree {output.tree}
+        """
+
+rule repopulate:
+    '''
+    Puts back the duplicated sequences.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.nwk'),
+        dup = os.path.join(folder, '{date}', 'alignments', 'subsampled_{freq}_{i}.duplicates'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.duplicated.nwk'),
+    params:
+        mem = 2000,
+        name = 'repopulate_{freq}_{i}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/gotree:v0.4.0"
+    shell:
+        """
+        gotree repopulate -i {input.tree} -g {input.dup} -o {output.tree}
+        """
+
+rule collapse_non_informative_branches:
+    '''
+    Collapse internal branches of length <= 1/2 mut/site, set external branches of length <= 1/2 mut/site to zero.
+    If the tree is rooted and a root child branch is to be collapsed, set it to zero instead (to keep the tree rooted).
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.duplicated.nwk'),
+        length = os.path.join(folder, '{date}', 'alignments', 'subsampled_{freq}_{i}.length'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.duplicated.collapsed.nwk'),
+    params:
+        mem = 2000,
+        name = 'collapse_{freq}_{i}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        n=`head {input.length}`
+        l=`awk -v n="$n" 'BEGIN {{ m=1/n/2; print m}}'`
+
+        python3 py/collapse.py --input_tree {input.tree} --output_tree {output.tree} --threshold $l --feature dist
+        """
+
+rule root:
+    '''
+    Rooted the tree on the extremity (dist=0 from MRCA) of the branch separating
+    the MRCA of the sequences from [Li et al. 2020 http://arxiv.org/abs/2003.05580] and their duplicates.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+        og = os.path.join(folder, 'outgroup.txt'),
+        dup = os.path.join(folder, '{date}', 'alignments', 'duplicates.txt'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_{tree}.nwk'),
+    params:
+        mem = 2000,
+        name = 'root_{tree}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/preroot.py --in_tree {input.tree} --out_tree {output.tree} \
+        --outgroup {input.og} --duplicates {input.dup}
+        """
+
+rule name:
+    '''
+    Names the tree internal nodes and the root (as root).
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
+    output:
+        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.named.nwk'),
+    params:
+        mem = 2000,
+        name = 'root_{tree}_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/name.py --in_tree {input.tree} --out_tree {output.tree}
+        """
+
+rule tree_size:
+    '''
+    Calculates tree size.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', '{type}', '{tree}.nwk'),
+    output:
+        length = os.path.join(folder, '{date}', '{type}', '{tree}.ntips'),
+    singularity:
+        "docker://evolbioinfo/gotree:v0.3.0b"
+    params:
+        mem = 2000,
+        name = 'tree_size_{date}',
+        qos = 'fast'
+    threads: 1
+    shell:
+        """
+        gotree stats -i {input.tree} | tail -n 1 | awk '{{print $3}}' > {output.length}
+        """
+
+rule nex2nwk:
+    '''
+    Converts a nexus tree to newick.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'timetrees', '{tree}.nexus'),
+    output:
+        tree = os.path.join(folder, '{date}', 'timetrees', '{tree}.nwk'),
+    singularity: "docker://evolbioinfo/gotree:v0.3.0b"
+    params:
+        mem = 2000,
+        name = 'nex2nwk_{tree}_{date}',
+    threads: 1
+    shell:
+        """
+        gotree reformat newick -i {input.tree} -f nexus -o {output.tree}
+        sed -i -e 's/\\[[^]]*\\]//g' {output.tree}
+        """
+
+rule dates_lsd2:
+    '''
+    Creates a date file with root constraints
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.duplicated.collapsed.named.nwk'),
+        log = os.path.join(folder, '{date}', 'timetrees', 'raxfast.lsd2.log'),
+        dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates')
+    output:
+        dates = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.dates'),
+    threads: 1
+    params:
+        mem = 4000,
+        name = 'lsd2_dates_{freq}_{i}_{date}'
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        dd=`grep "], tMRCA" {input.log} | sed -e 's/rate [0-9\\.e+-]\\+ \\[[0-9\\.e+-]\\+; [0-9\\.e+-]\\+\\], tMRCA [0-9\\.e+-]\\+ \\[//g' \
+        | sed -e 's/\\], objective function [0-9\\.e+-]\\+//g' | sed 's/;/,/g' | sed 's/ //g'`
+
+        python3 py/add_root_constraints.py --tree {input.tree} --in_dates {input.dates} \
+        --out_dates {output.dates} --constraint "b($dd)"
+        """
+
+
+rule date_lsd2:
+    '''
+    Dates a tree.
+    -u 0
+    no -v
+    -m 33%
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.duplicated.collapsed.named.nwk'),
+        ntips = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast_subsampled_{freq}_{i}.duplicated.collapsed.named.ntips'),
+        dates = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.dates'),
+        length = os.path.join(folder, '{date}', 'alignments', 'subsampled_{freq}_{i}.length')
+    output:
+        tree = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.nexus'),
+        log = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.log'),
+        rd = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.rootdate'),
+        outliers = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.duplicated.collapsed.named.lsd2.outliers'),
+    threads: 1
+    singularity: "docker://evolbioinfo/lsd2:v1.6.5"
+    params:
+        mem = 4000,
+        name = 'lsd2_{freq}_{i}_{date}',
+        wd = os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.wd_lsd2')
+    shell:
+        """
+        n=`head {input.length}`
+        t=`head {input.ntips}`
+        m=`awk -v t="$t" 'BEGIN {{ m=int(t * 0.33); print m}}'`
+
+        echo "lsd2 -i {input.tree} -d {input.dates} -c -s $n -o {params.wd} -f 1000 -l 0 -R 366 -e 3 -m $m -u 0 -U 0"
+
+        lsd2 -i {input.tree} -d {input.dates} -c -s $n -o {params.wd}  -f 1000 -l 0 -R 366 -e 3 -m $m -u 0 -U 0
+
+        pattern_g='\\- The input dates associated with the following'
+        pattern_s='\\- The input dates associated with the following [0-9]* nodes are considered as outliers, so the nodes were removed from the analysis:  '
+
+        outliers=`grep -i "$pattern_g" {params.wd} | sed -e "s/$pattern_s//g"`
+        for o in $outliers
+        do
+            echo $o >> {output.outliers}
+        done
+
+        mv "{params.wd}.date.nexus" "{output.tree}"
+        mv "{params.wd}" "{output.log}"
+        rm -rf {params.wd}*
+
+        echo `grep "], tMRCA" {output.log} | sed -e 's/rate [0-9\\.e+-]\\+ \\[[0-9\\.e+-]\\+; [0-9\\.e+-]\\+\\], tMRCA //g' \
+        | sed -e 's/ \\[[0-9\\.e+-]\\+; [0-9\\.e+-]\\+\\], objective function [0-9\\.e+-]\\+//g'` > {output.rd}
+        """
+
+rule subsample_proportional:
+    '''
+    Subsamples the tree to keep about N tips in the following way:
+	keep the tips sampled non after 20 Jan 2020
+	use the number of declared cases in different countries by the date of interest (date wildcard)
+	to calculate the number of desired sequences kept for each country C:
+	n_kept(C) = min(n_sampled(C), max(5, N * n_declared(c) / total_declared))
+	to chose which tips to remove we use phylogenetic diversity:
+	repeatedly chose the tip with the shortest branch length and if it can be removed (sampling and date-wise) prune it,
+	till the desired number of tips is reached.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.nwk'),
+        locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
+        dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates'),
+        stats = os.path.join(folder, 'confirmed_cases.csv'),
+    output:
+        ids = expand(os.path.join(folder, '{{date}}', 'metadata', 'subsampled_phylogenetic_{i}.ids'), i=range(N)),
+        stats = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic.tab'),
+        stats_per_time = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic_per_time.tab'),
+    params:
+        mem = 2000,
+        name = 'subsample_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.2"
+    shell:
+        """
+        python3 py/phylogenetic_diversity.py --input_tree {input.tree} \
+        --input_locs {input.locs} --input_dates {input.dates}  --input_stats {input.stats} \
+        --date {wildcards.date} --size {SIZE} \
+        --output_stats {output.stats} --output_stats_per_time {output.stats_per_time} \
+        --output_ids {output.ids}
+        """
+
+rule subsampling_stats:
+    '''
+    Calculates subsampling statistics.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.nwk'),
+        locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
+        stats = os.path.join(folder, 'confirmed_cases.csv'),
+        ids_phy = os.path.join(folder, '{date}', 'metadata', 'subsampled_phylogenetic_0.ids'),
+        ids_gen =  os.path.join(folder, '{date}', 'metadata', 'subsampled_genomic_0.ids'),
+    output:
+        stats = os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'),
+    params:
+        mem = 2000,
+        name = 'subsample_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.2"
+    shell:
+        """
+        python3 py/subsampling_stats.py --input_tree {input.tree} \
+        --input_locs {input.locs} --input_stats {input.stats} \
+        --date {wildcards.date} \
+        --ids_phylogenetic {input.ids_phy} --ids_genomic {input.ids_gen} \
+        --output_stats {output.stats}
+        """
+
+
+rule freqs_proportional:
+    '''
+    Calculates proportional frequencies.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.nwk'),
+        locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
+        stats = os.path.join(folder, 'confirmed_cases.csv'),
+    output:
+        freqs_country = os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_country.tab'),
+        freqs_intregion = os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_intregion.tab'),
+        freqs_region = os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_region.tab'),
+    params:
+        mem = 2000,
+        name = 'freqs_{date}',
+        qos = 'fast'
+    threads: 1
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.2"
+    shell:
+        """
+        python3 py/frequencies.py --input_tree {input.tree} \
+        --input_locs {input.locs} --input_stats {input.stats} \
+        --date {wildcards.date} \
+        --output_frequencies_country {output.freqs_country} --output_frequencies_intregion {output.freqs_intregion} \
+        --output_frequencies_region {output.freqs_region}
+        """
