@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  font-family: helvetica,serif;
+  font-size: 14px;
+}
+
+#cy {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  background-color: #FFFFFF;
+}
+
+h1 {
+  opacity: 0.5;
+  font-size: 1em;
+}
+
+.floating {
+    max-width: 30%;
+    width: 120px;
+    float: right;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.cy-button {
+    background-color: #555555;
+    border: none;
+    color: white;
+    padding: 6px 0px;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 3px 10px 0 rgba(0,0,0,0.19);
+}
+
+a.cy-button:link, a.cy-button:visited, a.cy-button:hover {
+    color: white;
+    text-decoration: none;
+}
+
+
+.slidertext {
+    width: 100%;
+    color: #555555;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 15px;
+    text-align: center;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+    margin: 10px 0px;
+    display: inline-block;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 3px 10px 0 rgba(0,0,0,0.19);
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #555555;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #555555;
+    cursor: pointer;
+}
+
+@media all and (max-width: 600px) {
+    .buttontext {
+        display: none;
+    }
+}
+
+
+</style>
+<meta charset=utf-8 />
+<meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+<title>compressed.country.raxfast_subsampled_phylogenetic_4.lsd2</title>
+    
+    <script  type='text/javascript' src="https://pastml.pasteur.fr/static/js/jquery.min.js"></script>
+    
+    <script  type='text/javascript' src="https://pastml.pasteur.fr/static/js/jquery.qtip.min.js"></script>
+    
+    <script  type='text/javascript' src="https://pastml.pasteur.fr/static/js/cytoscape.min.js"></script>
+    
+    <script  type='text/javascript' src="https://pastml.pasteur.fr/static/js/cytoscape-qtip.js"></script>
+    
+    <script  type='text/javascript' src="https://pastml.pasteur.fr/static/js/cytoscape-svg.js"></script>
+    
+    
+    <link rel="stylesheet" type="text/css" href="https://pastml.pasteur.fr/static/css/jquery.qtip.min.css"/>
+    
+    <link rel="stylesheet" type="text/css" href="https://pastml.pasteur.fr/static/css/bootstrap.min.css"/>
+    
+<meta http-Equiv="Cache-Control" Content="no-cache" />
+<meta http-Equiv="Pragma" Content="no-cache" />
+<meta http-Equiv="Expires" Content="0" />
+</head>
+<body>
+<div id="fullscreenDiv">
+<div id="cy"></div>
+<div class="floating">
+    <a class="cy-button" href="#" id="fit" onclick="fit()">
+        <span class="glyphicon glyphicon-resize-full"></span><span class="buttontext">  Fit screen</span>
+    </a>
+    <a class="cy-button" href="#" id="reset" onclick="resetLayout()">
+        <span class="glyphicon glyphicon-picture"></span><span class="buttontext">  Restore layout</span>
+    </a>
+    <a class="cy-button" href="#" id="downloader" onclick="toImage()" download="compressed.country.raxfast_subsampled_phylogenetic_4.lsd2.jpg">
+        <span class="glyphicon glyphicon-save"></span><span class="buttontext">  Save (jpg)</span>
+    </a>
+    <a class="cy-button" href="#" id="downloader_svg" onclick="saveAsSvg()" download="compressed.country.raxfast_subsampled_phylogenetic_4.lsd2.svg">
+        <span class="glyphicon glyphicon-save"></span><span class="buttontext">  Save (svg)</span>
+    </a>
+    <a class="cy-button" href="#" id="fullscreen" onclick="toggleFullScreen()">
+        <span id="fsspan" class="glyphicon glyphicon-fullscreen"></span><span id="fstext" class="buttontext">  Full screen</span>
+    </a>
+    
+<div class="slidecontainer">
+  <input type="range" min="0" max="8" value="8" class="slider" id="myRange" step="1">
+  <div class="slidertext">date: <span id="demo"></span></div>
+</div>
+</div></div>
+<!-- Load appplication code at the end to ensure DOM is loaded -->
+<script type="text/javascript">var layoutOptions = {
+  name: 'preset',
+  positions: function(node){
+    node.position('x', node.data('node_x'));
+    node.position('y', node.data('node_y'));
+    return node.position();
+  },
+  fit: true, // whether to fit to viewport
+  padding: 1, // padding on fit
+};
+
+var cy = cytoscape({
+  container: document.getElementById('cy'),
+
+  style: cytoscape.stylesheet()
+    .selector('node')
+      .css({
+        'width': 300,
+        'height': 300,
+        'content': '',
+        'shape': 'ellipse',
+        'pie-size': '100%',
+        'background-color': '#909090',
+        'color': '#383838',
+        'text-opacity': 1,
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'font-size': 80,
+        'text-halign' : 'center',
+        'text-valign' : 'center',
+        'min-zoomed-font-size': 12,
+        'text-background-color' : '#ffffff',
+        'text-background-shape' : 'roundrectangle',
+        'text-background-opacity': .3,
+        'text-background-padding' : 1,
+      })
+    .selector('node[node_name]')
+      .css({
+        'content': 'data(node_name)',
+      })
+    .selector('node[tip]')
+      .css({
+        'width': 400,
+        'height': 400,
+        'font-size': 100,
+      })
+    .selector('node[unresolved]')
+      .css({
+        'shape': 'octagon',
+        'pie-size': '92%',
+        'width': 500,
+        'height': 500,
+        'font-size': 125,
+      })
+    .selector('node[node_size]')
+      .css({
+        'width': 'data(node_size)',
+        'height': 'data(node_size)',
+      })
+    .selector('node[node_fontsize]')
+      .css({
+        'font-size': 'data(node_fontsize)',
+      })
+    
+    .selector(".Brazil")
+        .css({
+        
+                'pie-1-background-color': "#ac66cc",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".Canada")
+        .css({
+        
+                'pie-1-background-color': "#cc4a33",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".China")
+        .css({
+        
+                'pie-1-background-color': "#85cc66",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".France")
+        .css({
+        
+                'pie-1-background-color': "#c499cc",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".Germany")
+        .css({
+        
+                'pie-1-background-color': "#c0cc33",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".Italy")
+        .css({
+        
+                'pie-1-background-color': "#7d66cc",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".Russia")
+        .css({
+        
+                'pie-1-background-color': "#66cc75",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".Spain")
+        .css({
+        
+                'pie-1-background-color': "#33cc56",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".USA")
+        .css({
+        
+                'pie-1-background-color': "#99cca8",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector(".UnitedKingdom")
+        .css({
+        
+                'pie-1-background-color': "#334acc",
+                'pie-1-background-size': '100.0\%',
+            
+        })
+    
+    .selector('edge')
+      .css({
+        'width': 50,
+        'font-size': 80,
+        'color': 'black',
+        'content': '',
+        'curve-style': 'bezier',
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': '#909090',
+        'opacity': 0.8,
+        'text-opacity': 1,
+        'line-color': '#909090',
+        'line-style': 'solid',
+        'text-background-color' : '#ffffff',
+        'text-background-shape' : 'roundrectangle',
+        'text-background-opacity': 1,
+        'text-background-padding' : 4,
+        'min-zoomed-font-size': 10,
+        'line-dash-pattern': [100, 10],
+      })
+    .selector('edge[polytomy]')
+      .css({
+        'line-style': 'dashed',
+      })
+    .selector('edge[edge_name>1]')
+      .css({
+        'line-color': '#383838',
+        'target-arrow-color': '#383838',
+        'content': 'data(edge_name)',
+      })
+    .selector('edge[edge_size]')
+      .css({
+        'width': 'data(edge_size)',
+        'font-size': 'data(edge_size)',
+      })
+    .selector(':selected')
+      .css({
+        'background-color': 'black',
+        'line-color': 'black',
+        'target-arrow-color': 'black',
+        'source-arrow-color': 'black',
+        'pie-size': '60%',
+        'opacity': 1
+      })
+    .selector('.faded')
+      .css({
+        'opacity': 0.25,
+        'text-opacity': 0
+      }),
+
+  elements: {'nodes': [{'data': {'node_size_6': 1514, 'node_in_tips_7': ' 261', 'node_fontsize_7': 230, 'node_fontsize_3': 229, 'node_name_8': 'China 261', 'node_in_tips_2': ' 257', 'node_fontsize_6': 230, 'node_fontsize_5': 230, 'mile': 0, 'node_in_ns_7': ' 57', 'node_roots_7': 'root', 'node_in_ns_3': ' 55', 'node_in_ns_8': ' 57', 'node_in_tips_0': ' 1', 'node_size_0': 169, 'node_root_dates_2': '10 Dec 2019', 'node_in_ns_1': ' 55', 'node_in_ns': ' 57', 'node_roots_6': 'root', 'node_roots_8': 'root', 'node_root_dates': '10 Dec 2019 (29 Nov 2019-10 Dec 2019)', 'node_in_tips_6': ' 261', 'node_roots_2': 'root', 'node_all_tips_7': ' 1796', 'node_root_dates_5': '10 Dec 2019', 'node_root_dates_7': '10 Dec 2019', 'node_all_tips_4': ' 1041', 'node_size': 1514, 'node_name_2': 'China 257', 'node_all_tips': ' 1995', 'node_root_dates_3': '10 Dec 2019', 'node_roots_3': 'root', 'node_roots_5': 'root', 'node_in_ns_5': ' 57', 'node_in_tips_8': ' 261', 'node_size_8': 1514, 'node_root_dates_8': '10 Dec 2019', 'node_in_ns_2': ' 55', 'node_in_tips_4': ' 261', 'node_in_ns_6': ' 57', 'node_root_dates_4': '10 Dec 2019', 'node_in_tips': ' 261', 'node_all_tips_5': ' 1368', 'node_in_tips_1': ' 248', 'node_size_1': 1497, 'node_all_tips_8': ' 1995', 'node_fontsize_1': 228, 'node_all_tips_1': ' 338', 'node_root_dates_1': '10 Dec 2019', 'node_fontsize_4': 230, 'node_in_tips_3': ' 259', 'node_in_ns_4': ' 57', 'node_name_0': 'China 1', 'node_size_5': 1514, 'node_size_7': 1514, 'node_name_6': 'China 261', 'node_roots_4': 'root', 'node_name_5': 'China 261', 'node_root_dates_0': '10 Dec 2019', 'node_root_dates_6': '10 Dec 2019', 'node_in_ns_0': ' 1', 'node_name_1': 'China 248', 'node_all_tips_3': ' 889', 'node_fontsize': 230, 'node_all_tips_6': ' 1549', 'node_name_3': 'China 259', 'node_in_tips_5': ' 261', 'node_size_3': 1511, 'node_name_7': 'China 261', 'node_all_tips_2': ' 561', 'node_size_2': 1509, 'node_fontsize_0': 76, 'node_name_4': 'China 261', 'node_size_4': 1514, 'node_name': 'China 261', 'node_roots_1': 'root', 'node_all_tips_0': ' 1', 'node_roots_0': 'root', 'node_fontsize_2': 229, 'node_fontsize_8': 230, 'node_roots': 'root', 'id': 0, 'tooltip': 'country: China', 'node_x': 8982.935714285715, 'node_y': 0}, 'classes': 'China'}, {'data': {'node_size_6': 262, 'node_in_tips_7': ' 3', 'node_fontsize_7': 87, 'node_fontsize_3': 82, 'node_name_8': 'Canada 3', 'node_in_tips_2': ' 0', 'node_fontsize_6': 87, 'node_fontsize_5': 87, 'mile': 2, 'node_in_ns_7': ' 1', 'node_roots_7': 'n258', 'node_in_ns_3': ' 1', 'node_in_ns_8': ' 1', 'node_root_dates_2': '01 Jan 2020', 'node_in_ns': ' 1', 'node_roots_6': 'n258', 'node_roots_8': 'n258', 'node_root_dates': '01 Jan 2020 (13 Dec 2019-08 Jan 2020)', 'node_in_tips_6': ' 3', 'node_roots_2': 'n258', 'node_all_tips_7': ' 174', 'node_root_dates_5': '01 Jan 2020', 'node_root_dates_7': '01 Jan 2020', 'node_all_tips_4': ' 120', 'node_size': 262, 'node_name_2': 'Canada 0', 'node_all_tips': ' 180', 'node_root_dates_3': '01 Jan 2020', 'node_roots_3': 'n258', 'node_roots_5': 'n258', 'node_in_ns_5': ' 1', 'node_in_tips_8': ' 3', 'node_size_8': 262, 'node_root_dates_8': '01 Jan 2020', 'node_in_ns_2': ' 1', 'node_in_tips_4': ' 3', 'node_in_ns_6': ' 1', 'node_root_dates_4': '01 Jan 2020', 'node_in_tips': ' 3', 'node_all_tips_5': ' 150', 'node_all_tips_8': ' 180', 'node_fontsize_4': 87, 'node_in_tips_3': ' 2', 'node_in_ns_4': ' 1', 'node_size_5': 262, 'node_size_7': 262, 'node_name_6': 'Canada 3', 'node_roots_4': 'n258', 'node_name_5': 'Canada 3', 'node_root_dates_6': '01 Jan 2020', 'node_all_tips_3': ' 84', 'node_fontsize': 87, 'node_all_tips_6': ' 166', 'node_name_3': 'Canada 2', 'node_in_tips_5': ' 3', 'node_size_3': 218, 'node_name_7': 'Canada 3', 'node_all_tips_2': ' 45', 'node_size_2': 133, 'node_name_4': 'Canada 3', 'node_size_4': 262, 'node_name': 'Canada 3', 'node_fontsize_2': 80, 'node_fontsize_8': 87, 'node_roots': 'n258', 'id': 1, 'tooltip': 'country: Canada', 'node_x': 686.5, 'node_y': 1412.0}, 'classes': 'Canada'}, {'data': {'node_size_6': 641, 'node_in_tips_7': ' 18', 'node_fontsize_7': 130, 'node_fontsize_3': 128, 'node_name_8': 'Germany 18', 'node_in_tips_2': ' 10', 'node_fontsize_6': 130, 'node_fontsize_5': 130, 'mile': 2, 'node_in_ns_7': ' 3', 'node_roots_7': 'n192', 'node_in_ns_3': ' 3', 'node_in_ns_8': ' 3', 'node_root_dates_2': '30 Jan 2020', 'node_in_ns': ' 3', 'node_roots_6': 'n192', 'node_roots_8': 'n192', 'node_root_dates': '30 Jan 2020 (15 Jan 2020-10 Feb 2020)', 'node_in_tips_6': ' 18', 'node_roots_2': 'n192', 'node_all_tips_7': ' 30', 'node_root_dates_5': '30 Jan 2020', 'node_root_dates_7': '30 Jan 2020', 'node_all_tips_4': ' 25', 'node_size': 641, 'node_name_2': 'Germany 10', 'node_all_tips': ' 31', 'node_root_dates_3': '30 Jan 2020', 'node_roots_3': 'n192', 'node_roots_5': 'n192', 'node_in_ns_5': ' 3', 'node_in_tips_8': ' 18', 'node_size_8': 641, 'node_root_dates_8': '30 Jan 2020', 'node_in_ns_2': ' 3', 'node_in_tips_4': ' 18', 'node_in_ns_6': ' 3', 'node_root_dates_4': '30 Jan 2020', 'node_in_tips': ' 18', 'node_all_tips_5': ' 26', 'node_all_tips_8': ' 31', 'node_fontsize_4': 130, 'node_in_tips_3': ' 17', 'node_in_ns_4': ' 3', 'node_size_5': 641, 'node_size_7': 641, 'node_name_6': 'Germany 18', 'node_roots_4': 'n192', 'node_name_5': 'Germany 18', 'node_root_dates_6': '30 Jan 2020', 'node_all_tips_3': ' 22', 'node_fontsize': 130, 'node_all_tips_6': ' 28', 'node_name_3': 'Germany 17', 'node_in_tips_5': ' 18', 'node_size_3': 624, 'node_name_7': 'Germany 18', 'node_all_tips_2': ' 11', 'node_size_2': 483, 'node_name_4': 'Germany 18', 'node_size_4': 641, 'node_name': 'Germany 18', 'node_fontsize_2': 112, 'node_fontsize_8': 130, 'node_roots': 'n192', 'id': 2, 'tip': 1, 'tooltip': 'country: Germany', 'node_x': 2217.5, 'node_y': 1601.5}, 'classes': 'Germany'}, {'data': {'node_size_6': 906, 'node_in_tips_7': ' 42', 'node_fontsize_7': 160, 'node_fontsize_3': 117, 'node_name_8': 'Italy 42', 'node_in_tips_2': ' 8', 'node_fontsize_6': 160, 'node_fontsize_5': 152, 'mile': 2, 'node_in_ns_7': ' 9', 'node_roots_7': 'n3', 'node_in_ns_3': ' 6', 'node_in_ns_8': ' 9', 'node_root_dates_2': '15 Jan 2020', 'node_in_ns': ' 9', 'node_roots_6': 'n3', 'node_roots_8': 'n3', 'node_root_dates': '15 Jan 2020 (01 Jan 2020-22 Jan 2020)', 'node_in_tips_6': ' 42', 'node_roots_2': 'n3', 'node_all_tips_7': ' 906', 'node_root_dates_5': '15 Jan 2020', 'node_root_dates_7': '15 Jan 2020', 'node_all_tips_4': ' 331', 'node_size': 906, 'node_name_2': 'Italy 8', 'node_all_tips': ' 1081', 'node_root_dates_3': '15 Jan 2020', 'node_roots_3': 'n3', 'node_roots_5': 'n3', 'node_in_ns_5': ' 9', 'node_in_tips_8': ' 42', 'node_size_8': 906, 'node_root_dates_8': '15 Jan 2020', 'node_in_ns_2': ' 3', 'node_in_tips_4': ' 17', 'node_in_ns_6': ' 9', 'node_root_dates_4': '15 Jan 2020', 'node_in_tips': ' 42', 'node_all_tips_5': ' 574', 'node_all_tips_8': ' 1081', 'node_fontsize_4': 128, 'node_in_tips_3': ' 12', 'node_in_ns_4': ' 7', 'node_size_5': 837, 'node_size_7': 906, 'node_name_6': 'Italy 42', 'node_roots_4': 'n3', 'node_name_5': 'Italy 34', 'node_root_dates_6': '15 Jan 2020', 'node_all_tips_3': ' 239', 'node_fontsize': 160, 'node_all_tips_6': ' 696', 'node_name_3': 'Italy 12', 'node_in_tips_5': ' 34', 'node_size_3': 529, 'node_name_7': 'Italy 42', 'node_all_tips_2': ' 77', 'node_size_2': 431, 'node_name_4': 'Italy 17', 'node_size_4': 624, 'node_name': 'Italy 42', 'node_fontsize_2': 106, 'node_fontsize_8': 160, 'node_roots': 'n3', 'id': 3, 'tooltip': 'country: Italy', 'node_x': 6819.55, 'node_y': 1734.0}, 'classes': 'Italy'}, {'data': {'node_size_6': 589, 'node_in_tips_7': ' 15', 'node_fontsize_7': 124, 'node_fontsize_3': 115, 'node_name_8': 'Spain 15', 'node_in_tips_2': ' 1', 'node_fontsize_6': 124, 'node_fontsize_5': 122, 'mile': 2, 'node_in_ns_7': ' 5', 'node_roots_7': 'n255.polytomy_61', 'node_in_ns_3': ' 5', 'node_in_ns_8': ' 5', 'node_root_dates_2': '15 Jan 2020', 'node_in_ns': ' 5-6', 'node_roots_6': 'n255.polytomy_61', 'node_roots_8': 'n255.polytomy_61', 'node_root_dates': '15 Jan 2020 (21 Dec 2019-02 Feb 2020), 06 Feb 2020 (04 Jan 2020-21 Feb 2020)', 'node_in_tips_6': ' 15', 'node_roots_2': 'n255.polytomy_61', 'node_all_tips_7': ' 25', 'node_root_dates_5': '15 Jan 2020', 'node_root_dates_7': '15 Jan 2020', 'node_all_tips_4': ' 16', 'node_size': 1002, 'node_name_2': 'Spain 1', 'node_all_tips': ' 26', 'node_root_dates_3': '15 Jan 2020', 'node_roots_3': 'n255.polytomy_61', 'node_roots_5': 'n255.polytomy_61', 'node_in_ns_5': ' 5', 'node_in_tips_8': ' 15', 'node_size_8': 589, 'node_root_dates_8': '15 Jan 2020', 'node_in_ns_2': ' 2', 'node_in_tips_4': ' 12', 'node_in_ns_6': ' 5', 'node_root_dates_4': '15 Jan 2020', 'node_meta': 1, 'node_in_tips': ' 15-56', 'node_all_tips_5': ' 23', 'node_all_tips_8': ' 26', 'node_fontsize_4': 117, 'node_in_tips_3': ' 11', 'node_in_ns_4': ' 5', 'node_size_5': 570, 'node_size_7': 589, 'node_name_6': 'Spain 15', 'node_roots_4': 'n255.polytomy_61', 'node_name_5': 'Spain 14', 'node_root_dates_6': '15 Jan 2020', 'node_all_tips_3': ' 15', 'node_fontsize': 171, 'node_all_tips_6': ' 25', 'node_name_3': 'Spain 11', 'node_in_tips_5': ' 14', 'node_size_3': 507, 'node_name_7': 'Spain 15', 'node_all_tips_2': ' 1', 'node_size_2': 169, 'node_name_4': 'Spain 12', 'node_size_4': 529, 'node_name': 'Spain 15-56', 'node_fontsize_2': 76, 'node_fontsize_8': 124, 'node_roots': 'n255.polytomy_61, n306', 'id': 4, 'tip': 1, 'tooltip': 'country: Spain', 'node_x': 11463.0, 'node_y': 1782.0}, 'classes': 'Spain'}, {'data': {'node_size_6': 607, 'node_in_tips_7': ' 17', 'node_fontsize_7': 128, 'node_fontsize_3': 112, 'node_name_8': 'USA 18', 'node_in_tips_2': ' 8', 'node_fontsize_6': 126, 'node_fontsize_5': 117, 'mile': 1, 'node_in_ns_7': ' 3', 'node_roots_7': 'root.polytomy_68', 'node_in_ns_3': ' 3', 'node_in_ns_8': ' 3', 'node_root_dates_2': '22 Jan 2020', 'node_in_ns_1': ' 0', 'node_in_ns': ' 3', 'node_roots_6': 'root.polytomy_68', 'node_roots_8': 'root.polytomy_68', 'node_root_dates': '22 Jan 2020', 'node_in_tips_6': ' 16', 'node_roots_2': 'root.polytomy_68', 'node_all_tips_7': ' 18', 'node_root_dates_5': '22 Jan 2020', 'node_root_dates_7': '22 Jan 2020', 'node_all_tips_4': ' 12', 'node_size': 641, 'node_name_2': 'USA 8', 'node_all_tips': ' 19', 'node_root_dates_3': '22 Jan 2020', 'node_roots_3': 'root.polytomy_68', 'node_roots_5': 'root.polytomy_68', 'node_in_ns_5': ' 3', 'node_in_tips_8': ' 18', 'node_size_8': 641, 'node_root_dates_8': '22 Jan 2020', 'node_in_ns_2': ' 3', 'node_in_tips_4': ' 11', 'node_in_ns_6': ' 3', 'node_root_dates_4': '22 Jan 2020', 'node_in_tips': ' 18', 'node_all_tips_5': ' 13', 'node_in_tips_1': ' 1', 'node_size_1': 169, 'node_all_tips_8': ' 19', 'node_fontsize_1': 76, 'node_all_tips_1': ' 2', 'node_root_dates_1': '22 Jan 2020', 'node_fontsize_4': 115, 'node_in_tips_3': ' 10', 'node_in_ns_4': ' 3', 'node_size_5': 529, 'node_size_7': 624, 'node_name_6': 'USA 16', 'node_roots_4': 'root.polytomy_68', 'node_name_5': 'USA 12', 'node_root_dates_6': '22 Jan 2020', 'node_name_1': 'USA 1', 'node_all_tips_3': ' 11', 'node_fontsize': 130, 'node_all_tips_6': ' 17', 'node_name_3': 'USA 10', 'node_in_tips_5': ' 12', 'node_size_3': 483, 'node_name_7': 'USA 17', 'node_all_tips_2': ' 9', 'node_size_2': 431, 'node_name_4': 'USA 11', 'node_size_4': 507, 'node_name': 'USA 18', 'node_roots_1': 'root.polytomy_68', 'node_fontsize_2': 106, 'node_fontsize_8': 130, 'node_roots': 'root.polytomy_68', 'id': 5, 'tip': 1, 'tooltip': 'country: USA', 'node_x': 12808.5, 'node_y': 1601.5}, 'classes': 'USA'}, {'data': {'node_size_6': 169, 'node_in_tips_7': ' 1', 'node_fontsize_7': 76, 'node_fontsize_3': 76, 'node_name_8': 'USA 1', 'node_in_tips_2': ' 1', 'node_fontsize_6': 76, 'node_fontsize_5': 76, 'mile': 2, 'node_in_ns_7': ' 0', 'node_roots_7': 'EPI_ISL_419561', 'node_in_ns_3': ' 0', 'node_in_ns_8': ' 0', 'node_root_dates_2': '28 Feb 2020', 'node_in_ns': ' 0-3', 'node_roots_6': 'EPI_ISL_419561', 'node_roots_8': 'EPI_ISL_419561', 'node_root_dates': '19 Jan 2020, 19 Jan 2020, 22 Jan 2020, 22 Jan 2020, 30 Jan 2020, 30 Jan 2020, 30 Jan 2020, 10 Feb 2020, 10 Feb 2020, 28 Feb 2020, 21 Mar 2020, 06 Feb 2020, 22 Jan 2020 (04 Jan 2020-30 Jan 2020)', 'node_in_tips_6': ' 1', 'node_roots_2': 'EPI_ISL_419561', 'node_all_tips_7': ' 1', 'node_root_dates_5': '28 Feb 2020', 'node_root_dates_7': '28 Feb 2020', 'node_all_tips_4': ' 1', 'node_size': 431, 'node_name_2': 'USA 1', 'node_all_tips': ' 1', 'node_root_dates_3': '28 Feb 2020', 'node_roots_3': 'EPI_ISL_419561', 'node_roots_5': 'EPI_ISL_419561', 'node_in_ns_5': ' 0', 'node_in_tips_8': ' 1', 'node_size_8': 169, 'node_root_dates_8': '28 Feb 2020', 'node_in_ns_2': ' 0', 'node_in_tips_4': ' 1', 'node_in_ns_6': ' 0', 'node_root_dates_4': '28 Feb 2020', 'node_meta': 1, 'node_in_tips': ' 1-8', 'node_all_tips_5': ' 1', 'node_all_tips_8': ' 1', 'node_fontsize_4': 76, 'node_in_tips_3': ' 1', 'node_in_ns_4': ' 0', 'node_size_5': 169, 'node_size_7': 169, 'node_name_6': 'USA 1', 'node_roots_4': 'EPI_ISL_419561', 'node_name_5': 'USA 1', 'node_root_dates_6': '28 Feb 2020', 'node_all_tips_3': ' 1', 'node_fontsize': 106, 'node_all_tips_6': ' 1', 'node_name_3': 'USA 1', 'node_in_tips_5': ' 1', 'node_size_3': 169, 'node_name_7': 'USA 1', 'node_all_tips_2': ' 1', 'node_size_2': 169, 'node_name_4': 'USA 1', 'node_size_4': 169, 'node_name': 'USA 1-8', 'node_fontsize_2': 76, 'node_fontsize_8': 76, 'node_roots': 'EPI_ISL_404253, EPI_ISL_404895, EPI_ISL_406034, EPI_ISL_406223, EPI_ISL_408010, EPI_ISL_408670, EPI_ISL_409067, EPI_ISL_411955, EPI_ISL_411956, EPI_ISL_419561, EPI_ISL_424280, n336.polytomy_68, n351', 'id': 6, 'tip': 1, 'tooltip': 'country: USA', 'node_x': 13868.5, 'node_y': 1496.5}, 'classes': 'USA'}, {'data': {'node_size_6': 686, 'node_in_tips_7': ' 32', 'node_fontsize_7': 150, 'node_fontsize_3': 106, 'node_name_8': 'United Kingdom 32', 'node_in_tips_2': ' 8', 'node_fontsize_6': 135, 'node_fontsize_5': 122, 'mile': 2, 'node_in_ns_7': ' 10', 'node_roots_7': 'n210', 'node_in_ns_3': ' 5', 'node_in_ns_8': ' 10', 'node_root_dates_2': '01 Jan 2020', 'node_in_ns': ' 10', 'node_roots_6': 'n210', 'node_roots_8': 'n210', 'node_root_dates': '01 Jan 2020 (13 Dec 2019-08 Jan 2020)', 'node_in_tips_6': ' 21', 'node_roots_2': 'n210', 'node_all_tips_7': ' 56', 'node_root_dates_5': '01 Jan 2020', 'node_root_dates_7': '01 Jan 2020', 'node_all_tips_4': ' 22', 'node_size': 818, 'node_name_2': 'United Kingdom 8', 'node_all_tips': ' 57', 'node_root_dates_3': '01 Jan 2020', 'node_roots_3': 'n210', 'node_roots_5': 'n210', 'node_in_ns_5': ' 7', 'node_in_tips_8': ' 32', 'node_size_8': 818, 'node_root_dates_8': '01 Jan 2020', 'node_in_ns_2': ' 5', 'node_in_tips_4': ' 9', 'node_in_ns_6': ' 8', 'node_root_dates_4': '01 Jan 2020', 'node_in_tips': ' 32', 'node_all_tips_5': ' 34', 'node_all_tips_8': ' 57', 'node_fontsize_4': 109, 'node_in_tips_3': ' 8', 'node_in_ns_4': ' 6', 'node_size_5': 570, 'node_size_7': 818, 'node_name_6': 'United Kingdom 21', 'node_roots_4': 'n210', 'node_name_5': 'United Kingdom 14', 'node_root_dates_6': '01 Jan 2020', 'node_all_tips_3': ' 17', 'node_fontsize': 150, 'node_all_tips_6': ' 45', 'node_name_3': 'United Kingdom 8', 'node_in_tips_5': ' 14', 'node_size_3': 431, 'node_name_7': 'United Kingdom 32', 'node_all_tips_2': ' 13', 'node_size_2': 431, 'node_name_4': 'United Kingdom 9', 'node_size_4': 458, 'node_name': 'United Kingdom 32', 'node_fontsize_2': 106, 'node_fontsize_8': 150, 'node_roots': 'n210', 'id': 7, 'tip': 1, 'tooltip': 'country: United Kingdom', 'node_x': 15017.0, 'node_y': 1690.0}, 'classes': 'UnitedKingdom'}, {'data': {'node_size_6': 1345, 'node_in_tips_7': ' 164', 'node_fontsize_7': 212, 'node_fontsize_3': 183, 'node_name_8': 'USA 170', 'node_in_tips_2': ' 45', 'node_fontsize_6': 210, 'node_fontsize_5': 206, 'mile': 2, 'node_in_ns_7': ' 36', 'node_roots_7': 'n258.polytomy_68', 'node_in_ns_3': ' 19', 'node_in_ns_8': ' 36', 'node_root_dates_2': '08 Jan 2020', 'node_in_ns': ' 36', 'node_roots_6': 'n258.polytomy_68', 'node_roots_8': 'n258.polytomy_68', 'node_root_dates': '08 Jan 2020 (24 Dec 2019-15 Jan 2020)', 'node_in_tips_6': ' 156', 'node_roots_2': 'n258.polytomy_68', 'node_all_tips_7': ' 171', 'node_root_dates_5': '08 Jan 2020', 'node_root_dates_7': '08 Jan 2020', 'node_all_tips_4': ' 117', 'node_size': 1373, 'node_name_2': 'USA 45', 'node_all_tips': ' 177', 'node_root_dates_3': '08 Jan 2020', 'node_roots_3': 'n258.polytomy_68', 'node_roots_5': 'n258.polytomy_68', 'node_in_ns_5': ' 33', 'node_in_tips_8': ' 170', 'node_size_8': 1373, 'node_root_dates_8': '08 Jan 2020', 'node_in_ns_2': ' 6', 'node_in_tips_4': ' 111', 'node_in_ns_6': ' 35', 'node_root_dates_4': '08 Jan 2020', 'node_in_tips': ' 170', 'node_all_tips_5': ' 147', 'node_all_tips_8': ' 177', 'node_fontsize_4': 197, 'node_in_tips_3': ' 77', 'node_in_ns_4': ' 28', 'node_size_5': 1309, 'node_size_7': 1361, 'node_name_6': 'USA 156', 'node_roots_4': 'n258.polytomy_68', 'node_name_5': 'USA 140', 'node_root_dates_6': '08 Jan 2020', 'node_all_tips_3': ' 82', 'node_fontsize': 214, 'node_all_tips_6': ' 163', 'node_name_3': 'USA 77', 'node_in_tips_5': ' 140', 'node_size_3': 1109, 'node_name_7': 'USA 164', 'node_all_tips_2': ' 45', 'node_size_2': 929, 'node_name_4': 'USA 111', 'node_size_4': 1231, 'node_name': 'USA 170', 'node_fontsize_2': 163, 'node_fontsize_8': 214, 'node_roots': 'n258.polytomy_68', 'id': 8, 'tip': 1, 'tooltip': 'country: USA', 'node_x': 686.5, 'node_y': 2753.5}, 'classes': 'USA'}, {'data': {'node_size_6': 607, 'node_in_tips_7': ' 16', 'node_fontsize_7': 126, 'node_fontsize_3': 82, 'node_name_8': 'Brazil 16', 'node_fontsize_6': 126, 'node_fontsize_5': 122, 'mile': 3, 'node_in_ns_7': ' 6', 'node_roots_7': 'n127.polytomy_6', 'node_in_ns_3': ' 1', 'node_in_ns_8': ' 6', 'node_in_ns': ' 6', 'node_roots_6': 'n127.polytomy_6', 'node_roots_8': 'n127.polytomy_6', 'node_root_dates': '10 Feb 2020 (26 Jan 2020-24 Feb 2020)', 'node_in_tips_6': ' 16', 'node_all_tips_7': ' 19', 'node_root_dates_5': '10 Feb 2020', 'node_root_dates_7': '10 Feb 2020', 'node_all_tips_4': ' 10', 'node_size': 607, 'node_all_tips': ' 19', 'node_root_dates_3': '10 Feb 2020', 'node_roots_3': 'n127.polytomy_6', 'node_roots_5': 'n127.polytomy_6', 'node_in_ns_5': ' 6', 'node_in_tips_8': ' 16', 'node_size_8': 607, 'node_root_dates_8': '10 Feb 2020', 'node_in_tips_4': ' 8', 'node_in_ns_6': ' 6', 'node_root_dates_4': '10 Feb 2020', 'node_in_tips': ' 16', 'node_all_tips_5': ' 16', 'node_all_tips_8': ' 19', 'node_fontsize_4': 106, 'node_in_tips_3': ' 2', 'node_in_ns_4': ' 6', 'node_size_5': 570, 'node_size_7': 607, 'node_name_6': 'Brazil 16', 'node_roots_4': 'n127.polytomy_6', 'node_name_5': 'Brazil 14', 'node_root_dates_6': '10 Feb 2020', 'node_all_tips_3': ' 4', 'node_fontsize': 126, 'node_all_tips_6': ' 19', 'node_name_3': 'Brazil 2', 'node_in_tips_5': ' 14', 'node_size_3': 218, 'node_name_7': 'Brazil 16', 'node_name_4': 'Brazil 8', 'node_size_4': 431, 'node_name': 'Brazil 16', 'node_fontsize_8': 126, 'node_roots': 'n127.polytomy_6', 'id': 9, 'tip': 1, 'tooltip': 'country: Brazil', 'node_x': 3365.5, 'node_y': 3014.5}, 'classes': 'Brazil'}, {'data': {'node_size_6': 936, 'node_in_tips_7': ' 46', 'node_fontsize_7': 164, 'node_fontsize_3': 122, 'node_name_8': 'France 46', 'node_in_tips_2': ' 3', 'node_fontsize_6': 164, 'node_fontsize_5': 159, 'mile': 2, 'node_in_ns_7': ' 12', 'node_roots_7': 'n3.polytomy_20', 'node_in_ns_3': ' 6', 'node_in_ns_8': ' 12', 'node_root_dates_2': '19 Jan 2020', 'node_in_ns': ' 12', 'node_roots_6': 'n3.polytomy_20', 'node_roots_8': 'n3.polytomy_20', 'node_root_dates': '19 Jan 2020 (04 Jan 2020-30 Jan 2020)', 'node_in_tips_6': ' 46', 'node_roots_2': 'n3.polytomy_20', 'node_all_tips_7': ' 462', 'node_root_dates_5': '19 Jan 2020', 'node_root_dates_7': '19 Jan 2020', 'node_all_tips_4': ' 117', 'node_size': 936, 'node_name_2': 'France 3', 'node_all_tips': ' 580', 'node_root_dates_3': '19 Jan 2020', 'node_roots_3': 'n3.polytomy_20', 'node_roots_5': 'n3.polytomy_20', 'node_in_ns_5': ' 12', 'node_in_tips_8': ' 46', 'node_size_8': 936, 'node_root_dates_8': '19 Jan 2020', 'node_in_ns_2': ' 4', 'node_in_tips_4': ' 17', 'node_in_ns_6': ' 12', 'node_root_dates_4': '19 Jan 2020', 'node_in_tips': ' 46', 'node_all_tips_5': ' 249', 'node_all_tips_8': ' 580', 'node_fontsize_4': 128, 'node_in_tips_3': ' 14', 'node_in_ns_4': ' 8', 'node_size_5': 898, 'node_size_7': 936, 'node_name_6': 'France 46', 'node_roots_4': 'n3.polytomy_20', 'node_name_5': 'France 41', 'node_root_dates_6': '19 Jan 2020', 'node_all_tips_3': ' 63', 'node_fontsize': 164, 'node_all_tips_6': ' 316', 'node_name_3': 'France 14', 'node_in_tips_5': ' 41', 'node_size_3': 570, 'node_name_7': 'France 46', 'node_all_tips_2': ' 16', 'node_size_2': 262, 'node_name_4': 'France 17', 'node_size_4': 624, 'node_name': 'France 46', 'node_fontsize_2': 87, 'node_fontsize_8': 164, 'node_roots': 'n3.polytomy_20', 'id': 10, 'tooltip': 'country: France', 'node_x': 5152.25, 'node_y': 3179.0}, 'classes': 'France'}, {'data': {'node_size_6': 403, 'node_in_tips_7': ' 10', 'node_fontsize_7': 112, 'node_fontsize_3': 76, 'node_name_8': 'Russia 23', 'node_fontsize_6': 103, 'node_fontsize_5': 91, 'mile': 3, 'node_in_ns_7': ' 4', 'node_roots_7': 'n127.polytomy_53', 'node_in_ns_3': ' 0', 'node_in_ns_8': ' 4', 'node_in_ns': ' 4', 'node_roots_6': 'n127.polytomy_53', 'node_roots_8': 'n127.polytomy_53', 'node_root_dates': '02 Feb 2020 (22 Jan 2020-06 Feb 2020)', 'node_in_tips_6': ' 7', 'node_all_tips_7': ' 14', 'node_root_dates_5': '02 Feb 2020', 'node_root_dates_7': '02 Feb 2020', 'node_all_tips_4': ' 1', 'node_size': 714, 'node_all_tips': ' 27', 'node_root_dates_3': '02 Feb 2020', 'node_roots_3': 'n127.polytomy_53', 'node_roots_5': 'n127.polytomy_53', 'node_in_ns_5': ' 2', 'node_in_tips_8': ' 23', 'node_size_8': 714, 'node_root_dates_8': '02 Feb 2020', 'node_in_tips_4': ' 1', 'node_in_ns_6': ' 2', 'node_root_dates_4': '02 Feb 2020', 'node_in_tips': ' 23', 'node_all_tips_5': ' 5', 'node_all_tips_8': ' 27', 'node_fontsize_4': 76, 'node_in_tips_3': ' 1', 'node_in_ns_4': ' 0', 'node_size_5': 302, 'node_size_7': 483, 'node_name_6': 'Russia 7', 'node_roots_4': 'n127.polytomy_53', 'node_name_5': 'Russia 4', 'node_root_dates_6': '02 Feb 2020', 'node_all_tips_3': ' 1', 'node_fontsize': 138, 'node_all_tips_6': ' 10', 'node_name_3': 'Russia 1', 'node_in_tips_5': ' 4', 'node_size_3': 169, 'node_name_7': 'Russia 10', 'node_name_4': 'Russia 1', 'node_size_4': 169, 'node_name': 'Russia 23', 'node_fontsize_8': 138, 'node_roots': 'n127.polytomy_53', 'id': 11, 'tip': 1, 'tooltip': 'country: Russia', 'node_x': 7073.0, 'node_y': 3068.0}, 'classes': 'Russia'}, {'data': {'node_size_6': 1095, 'node_in_tips_7': ' 74', 'node_fontsize_7': 182, 'node_fontsize_3': 150, 'node_name_8': 'Spain 74', 'node_in_tips_2': ' 2', 'node_fontsize_6': 182, 'node_fontsize_5': 174, 'mile': 2, 'node_in_ns_7': ' 11', 'node_roots_7': 'n3.polytomy_61', 'node_in_ns_3': ' 8', 'node_in_ns_8': ' 11', 'node_root_dates_2': '26 Jan 2020', 'node_in_ns': ' 11', 'node_roots_6': 'n3.polytomy_61', 'node_roots_8': 'n3.polytomy_61', 'node_root_dates': '26 Jan 2020 (08 Jan 2020-17 Feb 2020)', 'node_in_tips_6': ' 74', 'node_roots_2': 'n3.polytomy_61', 'node_all_tips_7': ' 104', 'node_root_dates_5': '26 Jan 2020', 'node_root_dates_7': '26 Jan 2020', 'node_all_tips_4': ' 49', 'node_size': 1095, 'node_name_2': 'Spain 2', 'node_all_tips': ' 110', 'node_root_dates_3': '26 Jan 2020', 'node_roots_3': 'n3.polytomy_61', 'node_roots_5': 'n3.polytomy_61', 'node_in_ns_5': ' 11', 'node_in_tips_8': ' 74', 'node_size_8': 1095, 'node_root_dates_8': '26 Jan 2020', 'node_in_ns_2': ' 1', 'node_in_tips_4': ' 40', 'node_in_ns_6': ' 11', 'node_root_dates_4': '26 Jan 2020', 'node_in_tips': ' 74', 'node_all_tips_5': ' 81', 'node_all_tips_8': ' 110', 'node_fontsize_4': 158, 'node_in_tips_3': ' 32', 'node_in_ns_4': ' 8', 'node_size_5': 1030, 'node_size_7': 1095, 'node_name_6': 'Spain 74', 'node_roots_4': 'n3.polytomy_61', 'node_name_5': 'Spain 61', 'node_root_dates_6': '26 Jan 2020', 'node_all_tips_3': ' 39', 'node_fontsize': 182, 'node_all_tips_6': ' 96', 'node_name_3': 'Spain 32', 'node_in_tips_5': ' 61', 'node_size_3': 818, 'node_name_7': 'Spain 74', 'node_all_tips_2': ' 3', 'node_size_2': 218, 'node_name_4': 'Spain 40', 'node_size_4': 890, 'node_name': 'Spain 74', 'node_fontsize_2': 82, 'node_fontsize_8': 182, 'node_roots': 'n3.polytomy_61', 'id': 12, 'tip': 1, 'tooltip': 'country: Spain', 'node_x': 8501.5, 'node_y': 3258.5}, 'classes': 'Spain'}, {'data': {'node_size_6': 403, 'node_in_tips_7': ' 17', 'node_fontsize_7': 128, 'node_fontsize_3': 76, 'node_name_8': 'USA 37', 'node_fontsize_6': 103, 'node_fontsize_5': 87, 'mile': 3, 'node_in_ns_7': ' 6', 'node_roots_7': 'n3.polytomy_68', 'node_in_ns_3': ' 0', 'node_in_ns_8': ' 12', 'node_in_ns': ' 2-12', 'node_roots_6': 'n3.polytomy_68', 'node_roots_8': 'n3.polytomy_68', 'node_root_dates': '06 Feb 2020 (26 Jan 2020-21 Feb 2020), 30 Jan 2020 (04 Jan 2020-06 Mar 2020)', 'node_in_tips_6': ' 7', 'node_all_tips_7': ' 17', 'node_root_dates_5': '30 Jan 2020', 'node_root_dates_7': '30 Jan 2020', 'node_all_tips_4': ' 1', 'node_size': 865, 'node_all_tips': ' 37', 'node_root_dates_3': '30 Jan 2020', 'node_roots_3': 'n3.polytomy_68', 'node_roots_5': 'n3.polytomy_68', 'node_in_ns_5': ' 0', 'node_in_tips_8': ' 37', 'node_size_8': 865, 'node_root_dates_8': '30 Jan 2020', 'node_in_tips_4': ' 1', 'node_in_ns_6': ' 2', 'node_root_dates_4': '30 Jan 2020', 'node_meta': 1, 'node_in_tips': ' 15-37', 'node_all_tips_5': ' 3', 'node_all_tips_8': ' 37', 'node_fontsize_4': 76, 'node_in_tips_3': ' 1', 'node_in_ns_4': ' 0', 'node_size_5': 262, 'node_size_7': 624, 'node_name_6': 'USA 7', 'node_roots_4': 'n3.polytomy_68', 'node_name_5': 'USA 3', 'node_root_dates_6': '30 Jan 2020', 'node_all_tips_3': ' 1', 'node_fontsize': 156, 'node_all_tips_6': ' 7', 'node_name_3': 'USA 1', 'node_in_tips_5': ' 3', 'node_size_3': 169, 'node_name_7': 'USA 17', 'node_name_4': 'USA 1', 'node_size_4': 169, 'node_name': 'USA 15-37', 'node_fontsize_8': 156, 'node_roots': 'n127.polytomy_68, n3.polytomy_68', 'id': 13, 'tip': 1, 'tooltip': 'country: USA', 'node_x': 10005.5, 'node_y': 3143.5}, 'classes': 'USA'}, {'data': {'node_size_6': 1234, 'node_in_tips_7': ' 242', 'node_fontsize_7': 227, 'node_fontsize_3': 95, 'node_name_8': 'USA 341', 'node_in_tips_2': ' 2', 'node_fontsize_6': 198, 'node_fontsize_5': 180, 'mile': 2, 'node_in_ns_7': ' 59', 'node_roots_7': 'n4.polytomy_68', 'node_in_ns_3': ' 6', 'node_in_ns_8': ' 69', 'node_root_dates_2': '30 Jan 2020', 'node_in_ns': ' 69', 'node_roots_6': 'n4.polytomy_68', 'node_roots_8': 'n4.polytomy_68', 'node_root_dates': '30 Jan 2020 (19 Jan 2020-02 Feb 2020)', 'node_in_tips_6': ' 112', 'node_roots_2': 'n4.polytomy_68', 'node_all_tips_7': ' 382', 'node_root_dates_5': '30 Jan 2020', 'node_root_dates_7': '30 Jan 2020', 'node_all_tips_4': ' 90', 'node_size': 1600, 'node_name_2': 'USA 2', 'node_all_tips': ' 488', 'node_root_dates_3': '30 Jan 2020', 'node_roots_3': 'n4.polytomy_68', 'node_roots_5': 'n4.polytomy_68', 'node_in_ns_5': ' 29', 'node_in_tips_8': ' 341', 'node_size_8': 1600, 'node_root_dates_8': '30 Jan 2020', 'node_in_ns_2': ' 4', 'node_in_tips_4': ' 20', 'node_in_ns_6': ' 40', 'node_root_dates_4': '30 Jan 2020', 'node_in_tips': ' 341', 'node_all_tips_5': ' 188', 'node_all_tips_8': ' 488', 'node_fontsize_4': 133, 'node_in_tips_3': ' 5', 'node_in_ns_4': ' 14', 'node_size_5': 1081, 'node_size_7': 1489, 'node_name_6': 'USA 112', 'node_roots_4': 'n4.polytomy_68', 'node_name_5': 'USA 71', 'node_root_dates_6': '30 Jan 2020', 'node_all_tips_3': ' 44', 'node_fontsize': 240, 'node_all_tips_6': ' 246', 'node_name_3': 'USA 5', 'node_in_tips_5': ' 71', 'node_size_3': 338, 'node_name_7': 'USA 242', 'node_all_tips_2': ' 13', 'node_size_2': 218, 'node_name_4': 'USA 20', 'node_size_4': 672, 'node_name': 'USA 341', 'node_fontsize_2': 82, 'node_fontsize_8': 240, 'node_roots': 'n4.polytomy_68', 'id': 14, 'tooltip': 'country: USA', 'node_x': 5152.25, 'node_y': 4971.0}, 'classes': 'USA'}, {'data': {'node_size_6': 657, 'node_in_tips_7': ' 19', 'node_fontsize_7': 132, 'node_fontsize_3': 115, 'node_name_8': 'France 19', 'node_in_tips_2': ' 4', 'node_fontsize_6': 132, 'node_fontsize_5': 128, 'mile': 2, 'node_in_ns_7': ' 1', 'node_roots_7': 'n13.polytomy_20', 'node_in_ns_3': ' 1', 'node_in_ns_8': ' 1', 'node_root_dates_2': '30 Jan 2020', 'node_in_ns': ' 1', 'node_roots_6': 'n13.polytomy_20', 'node_roots_8': 'n13.polytomy_20', 'node_root_dates': '30 Jan 2020 (19 Jan 2020-02 Feb 2020)', 'node_in_tips_6': ' 19', 'node_roots_2': 'n13.polytomy_20', 'node_all_tips_7': ' 19', 'node_root_dates_5': '30 Jan 2020', 'node_root_dates_7': '30 Jan 2020', 'node_all_tips_4': ' 11', 'node_size': 657, 'node_name_2': 'France 4', 'node_all_tips': ' 19', 'node_root_dates_3': '30 Jan 2020', 'node_roots_3': 'n13.polytomy_20', 'node_roots_5': 'n13.polytomy_20', 'node_in_ns_5': ' 1', 'node_in_tips_8': ' 19', 'node_size_8': 657, 'node_root_dates_8': '30 Jan 2020', 'node_in_ns_2': ' 0', 'node_in_tips_4': ' 11', 'node_in_ns_6': ' 1', 'node_root_dates_4': '30 Jan 2020', 'node_in_tips': ' 19', 'node_all_tips_5': ' 17', 'node_all_tips_8': ' 19', 'node_fontsize_4': 115, 'node_in_tips_3': ' 11', 'node_in_ns_4': ' 1', 'node_size_5': 624, 'node_size_7': 657, 'node_name_6': 'France 19', 'node_roots_4': 'n13.polytomy_20', 'node_name_5': 'France 17', 'node_root_dates_6': '30 Jan 2020', 'node_all_tips_3': ' 11', 'node_fontsize': 132, 'node_all_tips_6': ' 19', 'node_name_3': 'France 11', 'node_in_tips_5': ' 17', 'node_size_3': 507, 'node_name_7': 'France 19', 'node_all_tips_2': ' 4', 'node_size_2': 302, 'node_name_4': 'France 11', 'node_size_4': 507, 'node_name': 'France 19', 'node_fontsize_2': 91, 'node_fontsize_8': 132, 'node_roots': 'n13.polytomy_20', 'id': 15, 'tip': 1, 'tooltip': 'country: France', 'node_x': 4521.5, 'node_y': 6623.5}, 'classes': 'France'}, {'data': {'node_size_6': 818, 'node_in_tips_7': ' 32', 'node_fontsize_7': 150, 'node_fontsize_3': 82, 'node_name_8': 'Germany 32', 'node_fontsize_6': 150, 'node_fontsize_5': 150, 'mile': 3, 'node_in_ns_7': ' 1', 'node_roots_7': 'n13.polytomy_23', 'node_in_ns_3': ' 0', 'node_in_ns_8': ' 1', 'node_in_ns': ' 1', 'node_roots_6': 'n13.polytomy_23', 'node_roots_8': 'n13.polytomy_23', 'node_root_dates': '03 Mar 2020 (06 Feb 2020-14 Mar 2020)', 'node_in_tips_6': ' 32', 'node_all_tips_7': ' 32', 'node_root_dates_5': '03 Mar 2020', 'node_root_dates_7': '03 Mar 2020', 'node_all_tips_4': ' 26', 'node_size': 818, 'node_all_tips': ' 32', 'node_root_dates_3': '03 Mar 2020', 'node_roots_3': 'n13.polytomy_23', 'node_roots_5': 'n13.polytomy_23', 'node_in_ns_5': ' 1', 'node_in_tips_8': ' 32', 'node_size_8': 818, 'node_root_dates_8': '03 Mar 2020', 'node_in_tips_4': ' 26', 'node_in_ns_6': ' 1', 'node_root_dates_4': '03 Mar 2020', 'node_in_tips': ' 32', 'node_all_tips_5': ' 32', 'node_all_tips_8': ' 32', 'node_fontsize_4': 143, 'node_in_tips_3': ' 2', 'node_in_ns_4': ' 1', 'node_size_5': 818, 'node_size_7': 818, 'node_name_6': 'Germany 32', 'node_roots_4': 'n13.polytomy_23', 'node_name_5': 'Germany 32', 'node_root_dates_6': '03 Mar 2020', 'node_all_tips_3': ' 2', 'node_fontsize': 150, 'node_all_tips_6': ' 32', 'node_name_3': 'Germany 2', 'node_in_tips_5': ' 32', 'node_size_3': 218, 'node_name_7': 'Germany 32', 'node_name_4': 'Germany 26', 'node_size_4': 752, 'node_name': 'Germany 32', 'node_fontsize_8': 150, 'node_roots': 'n13.polytomy_23', 'id': 16, 'tip': 1, 'tooltip': 'country: Germany', 'node_x': 5783.0, 'node_y': 6704.0}, 'classes': 'Germany'}], 'edges': [{'data': {'source': 0, 'target': 1, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 0, 'target': 2, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 0, 'target': 3, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 0, 'target': 4, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_name': '2', 'edge_size_3': 50, 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 58, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 0, 'target': 5, 'edge_name_3': '', 'mile': 1, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_1': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_name_1': '', 'edge_size_6': 50}}, {'data': {'source': 0, 'target': 6, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'edge_name': '13', 'edge_size_3': 50, 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 150, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 0, 'target': 7, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 1, 'target': 8, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 3, 'target': 9, 'edge_name_3': '', 'mile': 3, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_6': 50}}, {'data': {'source': 3, 'target': 10, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 3, 'target': 11, 'edge_name_3': '', 'mile': 3, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_6': 50}}, {'data': {'source': 3, 'target': 12, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 3, 'target': 13, 'edge_name_3': '', 'mile': 3, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_name': '2', 'edge_size_3': 50, 'edge_name_4': '', 'edge_size': 58, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_6': 50}}, {'data': {'source': 10, 'target': 14, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 14, 'target': 15, 'edge_name_3': '', 'mile': 2, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_2': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_2': 50, 'edge_size_6': 50}}, {'data': {'source': 14, 'target': 16, 'edge_name_3': '', 'mile': 3, 'edge_size_4': 50, 'edge_name_5': '', 'edge_size_7': 50, 'edge_name_8': '', 'polytomy': 1, 'edge_size_3': 50, 'edge_name': '', 'edge_name_4': '', 'edge_size': 50, 'edge_size_5': 50, 'edge_name_7': '', 'edge_size_8': 50, 'edge_name_6': '', 'edge_size_6': 50}}]},
+
+  layout: layoutOptions,
+
+  ready: function(){
+    window.cy = this;
+  }
+});
+
+function addQtips() {
+    cy.filter(function(ele, i, eles) {
+        return ele.isNode() && ele.data('tooltip') !== undefined;
+    } ).qtip({
+        content: function(){
+                var tooltip = '<br><div style="overflow: auto;"><span style="white-space:nowrap;">' + this.data('tooltip') + '</span></div>';
+                if (this.data('node_meta') !== undefined) {
+                    tooltip += '<br><div style="overflow: auto;"><span style="white-space:nowrap;">ids: ' + this.data('node_roots') + '</span></div>';
+                    tooltip += '<br><div style="overflow: auto;"><span style="white-space:nowrap;">date: ' + this.data('node_root_dates') + '</span></div>';
+                } else {
+                    tooltip += '<br>id: ' + this.data('node_roots') + '<br>';
+                    tooltip += '<br>date: ' + this.data('node_root_dates') + '<br>';
+                }
+                tooltip += '<br>samples inside: ' + this.data('node_in_tips');
+                tooltip += '<br>total samples in the subtree (inc. trimmed): ' + this.data('node_all_tips');
+                tooltip += '<br>diversification events inside: ' + this.data('node_in_ns');
+                return tooltip;
+            },
+        show: {event: 'mouseover'},
+        hide: {event: 'mouseout'},
+        style: {classes: 'qtip-bootstrap'},
+        position: {at: 'center bottom'}
+    });
+}
+
+cy.minZoom(.001);
+cy.maxZoom(20);
+addQtips();
+
+
+function toImage(){
+    document.getElementById("downloader").href = cy.jpg({ full: false, quality: 1.0, scale: 2}).replace(/^data:image\/[^;]/, 'data:application/octet-stream');
+}
+
+function saveAsSvg() {
+    var svgContent = cy.svg({scale: 1, full: true});
+    var blob = new Blob([svgContent], {type:"image/svg+xml;charset=utf-8"});
+    document.getElementById("downloader_svg").href = URL.createObjectURL(blob);
+}
+
+function fit() {
+    cy.fit();
+}
+
+function resetLayout() {
+    cy.startBatch();
+    cy.layout(layoutOptions).run();
+    if (removed !== undefined) {
+        removed.forEach(function( ele ) {
+            if (ele.data('node_x') !== undefined) {
+                ele.position('x', ele.data('node_x'));
+                ele.position('y', ele.data('node_y'));
+            }
+        });
+    }
+    cy.endBatch();
+}
+
+var years = ['24 Dec 2019', '30 Jan 2020', '28 Feb 2020', '10 Mar 2020', '14 Mar 2020', '21 Mar 2020', '28 Mar 2020', '01 Apr 2020', '19 Apr 2020'];
+var slider = document.getElementById("myRange");
+if (slider !== null) {
+    var output = document.getElementById("demo");
+    output.innerHTML = years[slider.value]; // Display the default slider value
+
+    // Update the current slider value (each time you drag the slider handle)
+    var removed = cy.collection();
+
+    slider.oninput = function() {
+        var mile = this.value;
+        output.innerHTML = years[mile];
+
+        cy.startBatch();
+        removed.restore();
+        removed = cy.remove("[mile>" + mile + "]");
+        cy.$("").forEach(function( ele ) {
+            if (ele.data('node_name_' + mile) !== undefined) {
+                ele.data('node_name', ele.data('node_name_' + mile));
+            }
+            if (ele.data('node_roots_' + mile) !== undefined) {
+                ele.data('node_roots', ele.data('node_roots_' + mile));
+            }
+            if (ele.data('node_root_dates_' + mile) !== undefined) {
+                ele.data('node_root_dates', ele.data('node_root_dates_' + mile));
+            }
+            if (ele.data('node_fontsize_' + mile) !== undefined) {
+                ele.data('node_fontsize', ele.data('node_fontsize_' + mile));
+            }
+            if (ele.data('node_in_tips_' + mile) !== undefined) {
+                ele.data('node_in_tips', ele.data('node_in_tips_' + mile));
+            }
+            if (ele.data('node_in_ns_' + mile) !== undefined) {
+                ele.data('node_in_ns', ele.data('node_in_ns_' + mile));
+            }
+            if (ele.data('node_all_tips_' + mile) !== undefined) {
+                ele.data('node_all_tips', ele.data('node_all_tips_' + mile));
+            }
+            if (ele.data('node_size_' + mile) !== undefined) {
+                ele.data('node_size', ele.data('node_size_' + mile));
+            }
+            if (ele.data('edge_name_' + mile) !== undefined) {
+                ele.data('edge_name', ele.data('edge_name_' + mile));
+            }
+            if (ele.data('edge_size_' + mile) !== undefined) {
+                ele.data('edge_size', ele.data('edge_size_' + mile));
+            }
+            if (ele.data('node_meta_' + mile) !== undefined) {
+                ele.data('node_meta', ele.data('node_meta_' + mile));
+            } else if (ele.data('node_meta') !== undefined) {
+                ele.removeData('node_meta');
+            }
+        });
+        cy.endBatch();
+    }
+}
+
+function toggleFullScreen() {
+  var elem = document.getElementById("fullscreenDiv");
+  if ((document.fullScreenElement && document.fullScreenElement !== null) ||
+   (!document.mozFullScreen && !document.webkitIsFullScreen)) {
+    if (elem.requestFullScreen) {
+      elem.requestFullScreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullScreen) {
+      elem.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+    }
+    document.getElementById("fsspan").className = "glyphicon glyphicon-resize-small"
+    document.getElementById("fstext").innerHTML = "  Exit full screen"
+  } else {
+    if (document.cancelFullScreen) {
+      document.cancelFullScreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitCancelFullScreen) {
+      document.webkitCancelFullScreen();
+    }
+    document.getElementById("fsspan").className = "glyphicon glyphicon-fullscreen"
+    document.getElementById("fstext").innerHTML = "  Full screen"
+  }
+}</script>
+</body>
+</html>
