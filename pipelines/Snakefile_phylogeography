@@ -15,21 +15,52 @@ from datetime import datetime
 
 
 localrules: all, pastml_itol
-ruleorder: pastml_vis_tree > pastml_vis > pastml_col
+ruleorder: pastml_vis_tree > pastml_vis > pastml_col_smoothed > pastml_col_constrained > pastml_col
 
 folder = os.path.abspath(config["folder"])
 dates = config["dates"]
 N = 5
-freqs = ['genomic', 'phylogenetic']
+freqs = ['genomic', 'PD']
 
 rule all:
     input:
-        expand(os.path.join(folder, '{date}', 'acr', 'map.{loc}.html'), loc=['country'], date=dates),
-        expand(os.path.join(folder, '{date}', 'acr', 'compressed.country.raxfast.lsd2.html'), date=dates),
-        expand(os.path.join(folder, '{date}', 'acr', '{type}.country.raxfast_subsampled_{freq}_{i}.lsd2.html'), date=dates, freq=freqs, i=range(N), type=['compressed', 'full']),
+#        expand(os.path.join(folder, '{date}', 'metadata', 'raxfast_subsampled_{freq}_{i}.lsd2.state_changes_country.tab'),  date=dates, freq=freqs, i=range(N)),
+        expand(os.path.join(folder, '{date}', 'acr', 'map.country.html'), date=dates),
+        expand(os.path.join(folder, '{date}', 'acr', '{type}.country.raxfast.lsd2.html'), date=dates, type=['compressed', 'transitions']),
+        expand(os.path.join(folder, '{date}', 'acr', '{type}.country.smoothed_raxfast.lsd2.html'), date=dates, type=['compressed', 'transitions']),
+#        expand(os.path.join(folder, '{date}', 'acr', 'compressed.country.raxfast_constrained_{freq}_{i}.lsd2.html'), date=dates, freq=freqs, i=range(N)),
+        expand(os.path.join(folder, '{date}', 'acr', '{type}.country.raxfast_subsampled_{freq}_{i}.lsd2.html'), date=dates, freq=freqs, i=range(N), type=['compressed', 'full', 'transitions']),
+        expand(os.path.join(folder, '{date}', 'acr', '{type}.country.smoothed_raxfast_subsampled_{freq}_{i}.lsd2.html'), date=dates, freq=freqs, i=range(N), type=['compressed', 'full', 'transitions']),
         expand(os.path.join(folder, '{date}', 'acr', 'pastml', 'itol_country', 'raxfast_subsampled_{freq}_{i}.lsd2', 'iTOL_url.txt'), date=dates, freq=freqs, i=range(N)),
         expand(os.path.join(folder, '{date}', 'metadata', 'pastml_country.tab'), date=dates),
-#        expand(os.path.join(folder, '{date}', 'acr', 'compressed.country_{country}.raxfast_subsampled_{freq}_{i}.lsd2.html'), country=['France', 'USA', 'Italy', 'Iceland', 'Germany', 'Russia', 'Singapore'], date=dates, freq=freqs, i=range(N)),
+#        expand(os.path.join(folder, '{date}', 'acr', 'compressed.country_{country}.raxfast_subsampled_{freq}_{i}.lsd2.html'), country=['France', 'USA', 'Italy', 'Iceland', 'Germany', 'Russia', 'Singapore', 'United Kingdom'], date=dates, freq=['PD'], i=0),
+
+rule pastml_col_constrained:
+    '''
+    ACR with PastML on the full tree with constraints from the subsampled tree.
+    '''
+    input:
+        tree_full = os.path.join(folder, '{date}', 'timetrees', '{tree}.{dating}.nexus'),
+        tree_subsampled = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_subsampled_{freq}_{i}.{dating}', 'named.tree_{tree}_subsampled_{freq}_{i}.{dating}.nwk'),
+        freqs = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_subsampled_{freq}_{i}.{dating}', 'params.character_{col}.method_MPPA.model_F81.tab'),
+    output:
+        data = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_constrained_{freq,genomic|PD}_{i,[0-9]}.{dating,lsd2|tt-[a-z]+}', 'combined_ancestral_states.tab'),
+        pars = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_constrained_{freq}_{i}.{dating}', 'params.character_{col}.method_MPPA.model_F81.tab'),
+        tree = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_constrained_{freq}_{i}.{dating}', 'named.tree_{tree}_constrained_{freq}_{i}.{dating}.nwk'),
+        tree_in = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_constrained_{freq}_{i}.{dating}', '{tree}_constrained_{freq}_{i}.{dating}.nwk'),
+    threads: 2
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
+    params:
+        mem = 4000,
+        name = 'pastml_{col}.{tree}_constrained_{freq}_{i}.{dating}_{date}',
+        wd = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}_constrained_{freq}_{i}.{dating}')
+    shell:
+        """
+        python3 py/copy_predictions.py --from_tree {input.tree_subsampled} --to_tree {input.tree_full} --out_tree {output.tree_in} --column "{wildcards.col}"
+
+        echo "pastml --tree {output.tree_in} --columns {wildcards.col} -v --work_dir {params.wd} --parameters {input.freqs} --smoothing --resolve_polytomies"
+        pastml --tree {output.tree_in} --columns {wildcards.col} -v --work_dir {params.wd} --parameters {input.freqs} --smoothing --resolve_polytomies
+        """
 
 rule pastml_col:
     '''
@@ -44,7 +75,7 @@ rule pastml_col:
         pars = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}.{dating}', 'params.character_{col}.method_MPPA.model_F81.tab'),
         tree = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}.{dating}', 'named.tree_{tree}.{dating}.nwk'),
     threads: 2
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.4"
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
     params:
         mem = 4000,
         name = 'pastml_{col}.{tree}.{dating}_{date}',
@@ -53,6 +84,33 @@ rule pastml_col:
         """
         echo "pastml --tree {input.tree} --data {input.data} --columns "{wildcards.col}" -v --work_dir "{params.wd}" --parameters {input.freqs} --smoothing --resolve_polytomies --reoptimise"
         pastml --tree {input.tree} --data {input.data} --columns "{wildcards.col}" -v --work_dir "{params.wd}" --parameters {input.freqs} --smoothing --resolve_polytomies --reoptimise
+        """
+
+rule pastml_col_smoothed:
+    '''
+    ACR with PastML.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'timetrees', '{tree}.{dating}.nexus'),
+        data = os.path.join(folder, '{date}', 'metadata', 'metadata.tab'),
+        freqs = os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_{col}.tab'),
+    output:
+        data = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', 'smoothed_{tree}.{dating,lsd2|tt-[a-z]+}', 'combined_ancestral_states.tab'),
+        pars = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', 'smoothed_{tree}.{dating}', 'params.character_{col}.method_MPPA.model_F81.tab'),
+        tree = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', 'smoothed_{tree}.{dating}', 'named.tree_smoothed_{tree}.{dating}.nwk'),
+    threads: 2
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
+    params:
+        mem = 4000,
+        name = 'pastml_{col}.{tree}.{dating}_{date}',
+        wd = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', 'smoothed_{tree}.{dating}'),
+        tree = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', 'smoothed_{tree}.{dating}', 'named.tree_{tree}.{dating}.nwk'),
+    shell:
+        """
+        echo "pastml --tree {input.tree} --data {input.data} --columns "{wildcards.col}" -v --work_dir "{params.wd}" --parameters {input.freqs} --smoothing --resolve_polytomies --frequency_smoothing --reoptimise"
+        pastml --tree {input.tree} --data {input.data} --columns "{wildcards.col}" -v --work_dir "{params.wd}" --parameters {input.freqs} --smoothing --resolve_polytomies --frequency_smoothing --reoptimise
+
+        mv {params.tree} {output.tree}
         """
 
 rule pastml_vis:
@@ -65,7 +123,7 @@ rule pastml_vis:
     output:
         map = os.path.join(folder, '{date}', 'acr', 'compressed.{col,country|region|intregion}.{tree}.{dating,lsd2|tt-[a-z]+}.html'),
     threads: 2
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.4"
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
     params:
         mem = 4000,
         name = 'pastml_{col}.{tree}.{dating}_vis_{date}',
@@ -79,6 +137,31 @@ rule pastml_vis:
         rm -rf "{params.wd}"
         """
 
+rule pastml_transitions:
+    '''
+    Visualising transition counts with PastML.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}.{dating}', 'named.tree_{tree}.{dating}.nwk'),
+        data = os.path.join(folder, '{date}', 'metadata', 'metadata.tab'),
+        pars = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}.{dating}', 'params.character_{col}.method_MPPA.model_F81.tab'),
+        colours = os.path.join(folder, 'country_colours.tab'),
+    output:
+        map = os.path.join(folder, '{date}', 'acr', 'transitions.{col,country|region|intregion}.{tree}.{dating,lsd2|tt-[a-z]+}.html'),
+        tab = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}.{dating}', 'transitions.character_{col}.method_MPPA.model_F81.tab'),
+    threads: 1
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.7"
+    params:
+        mem = 4000,
+        name = 'pastml_{col}.{tree}.{dating}_transitions_{date}',
+        qos = 'fast'
+    shell:
+        """
+        transition_counter --tree {input.tree} --data {input.data} --column "{wildcards.col}" -v \
+        --parameters {input.pars} -n 10000 -o {output.tab} --html {output.map} --colours {input.colours} \
+        --threshold 4
+        """
+
 rule pastml_vis_tree:
     '''
     Visualisation with PastML.
@@ -89,7 +172,7 @@ rule pastml_vis_tree:
     output:
         map = os.path.join(folder, '{date}', 'acr', 'full.{col,country|region|intregion}.{tree}.{dating,lsd2|tt-[a-z]+}.html'),
     threads: 2
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.4"
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
     params:
         mem = 4000,
         name = 'pastml_{col}.{tree}.{dating}_vist_{date}',
@@ -114,7 +197,7 @@ rule pastml_itol:
         itol = os.path.join(folder, '{date}', 'acr', 'pastml', 'itol_{col}', '{tree}', 'iTOL_url.txt'),
         treeid = os.path.join(folder, '{date}', 'acr', 'pastml', 'itol_{col}', '{tree}', 'iTOL_tree_id.txt'),
     threads: 2
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.4"
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
     params:
         mem = 4000,
         name = 'pastml_{col}.{tree}_itol_{date}',
@@ -139,7 +222,7 @@ rule pastml_vis_focused:
     output:
         map = os.path.join(folder, '{date}', 'acr', 'compressed.country_{country}.{tree}.{dating,lsd2|tt-[a-z]+}.html'),
     threads: 2
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.4"
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
     params:
         mem = 4000,
         name = 'vis_country_{country}.{tree}.{dating}_{date}',
@@ -166,7 +249,7 @@ rule geomap:
     params:
         mem = 4000,
         name = 'geomap_{loc}_{date}'
-    singularity: "docker://evolbioinfo/pastml:v1.9.28.1"
+    singularity: "docker://evolbioinfo/pastml:v1.9.29.6"
     shell:
         """
         geomap --data {input.data} --html {output.geo_map} --location {wildcards.loc} --country iso2
@@ -179,7 +262,7 @@ rule pastml_stats:
     '''
     input:
         freqs = os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_{col}.tab'),
-        pars_pd = expand(os.path.join(folder, '{{date}}', 'acr', 'pastml', '{{col}}', 'raxfast_subsampled_phylogenetic_{i}.lsd2', 'params.character_{{col}}.method_MPPA.model_F81.tab'), i=range(N)),
+        pars_pd = expand(os.path.join(folder, '{{date}}', 'acr', 'pastml', '{{col}}', 'raxfast_subsampled_PD_{i}.lsd2', 'params.character_{{col}}.method_MPPA.model_F81.tab'), i=range(N)),
         pars_g = expand(os.path.join(folder, '{{date}}', 'acr', 'pastml', '{{col}}', 'raxfast_subsampled_genomic_{i}.lsd2', 'params.character_{{col}}.method_MPPA.model_F81.tab'), i=range(N)),
     output:
         stats = os.path.join(folder, '{date}', 'metadata', 'pastml_{col}.tab'),
@@ -195,4 +278,24 @@ rule pastml_stats:
         python3 py/pastml_stats.py --freqs {input.freqs} --labels {params.labels} \
         --pastml_freqs {input.pars_pd} {input.pars_g} --col {wildcards.col} \
         --output_stats {output.stats}
+        """
+
+rule state_changes:
+    '''
+    Calculates statistics.
+    '''
+    input:
+        tree = os.path.join(folder, '{date}', 'acr', 'pastml', '{col}', '{tree}.{dating}', 'named.tree_{tree}.{dating}.nwk'),
+    output:
+        stats = os.path.join(folder, '{date}', 'metadata', '{tree}.{dating}.state_changes_{col}.tab'),
+    params:
+        mem = 2000,
+        name = 'pastats_changes_{date}',
+        qos = 'fast',
+    threads: 1
+    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
+    shell:
+        """
+        python3 py/calculate_changes.py --tree {input.tree} --columns {wildcards.col} \
+        --out_log {output.stats}
         """

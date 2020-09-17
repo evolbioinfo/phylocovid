@@ -16,13 +16,14 @@ import os
 
 
 localrules: all
+ruleorder: collapse_non_informative_branches > repopulate > raxfast > aln_for_ids
 
 folder = os.path.abspath(config["folder"])
 dates = config["dates"]
 
 N = 5
 SIZE = 2000
-freqs = ['phylogenetic', 'genomic']
+freqs = ['PD', 'genomic']
 
 rule all:
     input:
@@ -344,9 +345,9 @@ rule subsample_proportional:
         dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates'),
         stats = os.path.join(folder, 'confirmed_cases.csv'),
     output:
-        ids = expand(os.path.join(folder, '{{date}}', 'metadata', 'subsampled_phylogenetic_{i}.ids'), i=range(N)),
-        stats = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic.tab'),
-        stats_per_time = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic_per_time.tab'),
+        ids = expand(os.path.join(folder, '{{date}}', 'metadata', 'subsampled_PD_{i}.ids'), i=range(N)),
+        stats = os.path.join(folder, '{date}', 'metadata', 'sampling_PD.tab'),
+        stats_per_time = os.path.join(folder, '{date}', 'metadata', 'sampling_PD_per_time.tab'),
     params:
         mem = 2000,
         name = 'subsample_{date}',
@@ -357,9 +358,10 @@ rule subsample_proportional:
         """
         python3 py/phylogenetic_diversity.py --input_tree {input.tree} \
         --input_locs {input.locs} --input_dates {input.dates}  --input_stats {input.stats} \
-        --date {wildcards.date} --size {SIZE} \
+        --date {wildcards.date} \
         --output_stats {output.stats} --output_stats_per_time {output.stats_per_time} \
         --output_ids {output.ids}
+        # --size {SIZE}
         """
 
 rule subsampling_stats:
@@ -370,7 +372,7 @@ rule subsampling_stats:
         tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.nwk'),
         locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
         stats = os.path.join(folder, 'confirmed_cases.csv'),
-        ids_phy = os.path.join(folder, '{date}', 'metadata', 'subsampled_phylogenetic_0.ids'),
+        ids_phy = os.path.join(folder, '{date}', 'metadata', 'subsampled_PD_0.ids'),
         ids_gen =  os.path.join(folder, '{date}', 'metadata', 'subsampled_genomic_0.ids'),
     output:
         stats = os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'),
