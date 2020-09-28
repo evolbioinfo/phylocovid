@@ -19,7 +19,7 @@ rule fig1:
     Figure 1: declared, sampled and subsampled percentage by country.
     '''
     input:
-        tab = os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'),
+        tab = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic.tab'),
     output:
         png = os.path.join(folder, '{date}', 'figures', 'Figure1.png')
     threads: 1
@@ -50,24 +50,4 @@ rule fig2:
         """
         python3 py/plot_declared_sampled_curves.py --metadata {input.tab} --cases {input.cases} --date {wildcards.date} \
         --png {output.png}
-        """
-
-
-
-rule fig3:
-    '''
-    Figure 3: frequencies by country.
-    '''
-    input:
-        tab = os.path.join(folder, '{date}', 'metadata', 'pastml_country.tab'),
-    output:
-        png = os.path.join(folder, '{date}', 'figures', 'Figure3.png')
-    threads: 1
-    params:
-        mem = 4000,
-        name = 'metadata',
-    singularity: "docker://evolbioinfo/python-evol:v3.6richer"
-    shell:
-        """
-        python3 py/plot_freqs.py --tab {input.tab} --png {output.png}
         """

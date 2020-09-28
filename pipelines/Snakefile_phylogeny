@@ -3,16 +3,11 @@ import os
 # To run locally:
 # snakemake --snakefile Snakefile_phylogeny --keep-going --cores 7  --configfile config.yaml --use-singularity --singularity-prefix ~/.singularity --singularity-args "--home ~"
 
-# To run on bioevo:
-# change shakemake activation below if you are not Anna ;)
-# source /local/gensoft2/exe/conda/3.19.0/conda/bin/activate snakemake && module load singularity/3.5.3
-# snakemake --snakefile Snakefile_phylogeny --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p bioevo --qos=bioevo -A bioevo -J {params.name} -C avx2" --jobs 300
-
 # To visualise the pipeline
 # snakemake --snakefile Snakefile_phylogeny --configfile config.yaml --dag | dot -Tsvg > pipeline_phylogeny.svg
 
 
-localrules: all, upload_to_itol
+localrules: all
 ruleorder: collapse_non_informative_branches > prune_sequences_wo_dates > repopulate > root
 
 folder = os.path.abspath(config["folder"])
@@ -20,33 +15,7 @@ dates = config["dates"]
 
 rule all:
     input:
-        expand(os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.itol'), date=dates)
-
-
-rule dist_matrix:
-    '''
-    Calculates the raw (not normalised) p-dist matrix with goaling
-    '''
-    input:
-        aln = os.path.join(folder, '{date}', 'alignments', 'aln.fa'),
-    output:
-        aln = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.fa'),
-        matrix = os.path.join(folder, '{date}', 'alignments', 'aln.matrix'),
-        length = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.rescale'),
-    params:
-        mem = 60000,
-        name = 'matrix_{date}',
-        qos = 'fast'
-    singularity:
-        "docker://evolbioinfo/goalign:dev"
-    threads: 12
-    shell:
-        """
-        source ~/.bashrc
-        goalign clean sites -c 0.01 -i {input.aln} -o {output.aln} -t {threads}
-        goalign stats length -i {output.aln} > {output.length}
-        goalign compute distance -m rawdist -i {output.aln} --gap-mut 1 -o {output.matrix} -t {threads}
-        """
+        expand(os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.nwk'), date=dates)
 
 rule aln_length:
     '''
@@ -120,6 +89,31 @@ rule repopulate:
     shell:
         """
         gotree repopulate -i {input.tree} -g {input.dup} -o {output.tree}
+        """
+
+rule dist_matrix:
+    '''
+    Calculates the raw (not normalised) p-dist matrix with goaling
+    '''
+    input:
+        aln = os.path.join(folder, '{date}', 'alignments', 'aln.fa'),
+    output:
+        aln = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.fa'),
+        matrix = os.path.join(folder, '{date}', 'alignments', 'aln.matrix'),
+        length = os.path.join(folder, '{date}', 'alignments', 'aln.matrix.rescale'),
+    params:
+        mem = 60000,
+        name = 'matrix_{date}',
+        qos = 'fast'
+    singularity:
+        "docker://evolbioinfo/goalign:dev"
+    threads: 12
+    shell:
+        """
+        source ~/.bashrc
+        goalign clean sites -c 0.01 -i {input.aln} -o {output.aln} -t {threads}
+        goalign stats length -i {output.aln} > {output.length}
+        goalign compute distance -m rawdist -i {output.aln} --gap-mut 1 -o {output.matrix} -t {threads}
         """
 
 rule fastme:
@@ -274,48 +268,4 @@ rule rm_outliers:
     shell:
         """
         gotree prune -i {input.tree} -f {input.outliers} -o {output.tree}
-        """
-
-rule upload_to_itol:
-    '''
-    Uploads a tree to iTOL.
-    '''
-    input:
-        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
-    output:
-        log = os.path.join(folder, '{date}', 'phylogenies', '{tree}.itol'),
-    singularity:
-        "docker://evolbioinfo/gotree:v0.3.0b"
-    params:
-        mem = 2000,
-        name = 'itol_{tree}_{date}',
-        qos = 'fast',
-        tree_name = '{date}_{tree}'
-    threads: 1
-    shell:
-        """
-        gotree upload itol -i {input.tree} --project phylocovid --user-id ZxuhG2okfKLQnsgd5xAEGQ \
-        --name "{params.tree_name}" > {output.log}
-        """
-
-rule matching_metadata:
-    '''
-    Extract metadata that corresponds to the tree ids.
-    '''
-    input:
-        tree = os.path.join(folder, '{date}', 'phylogenies', '{tree}.nwk'),
-        locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
-        dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates'),
-    output:
-        tab = os.path.join(folder, '{date}', 'metadata', '{tree}.metadata.tab')
-    threads: 1
-    params:
-        mem = 4000,
-        name = 'metadata_{tree}_{date}',
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.2"
-    shell:
-        """
-        python3 py/submetadata.py --input_tree {input.tree} \
-        --input_locs {input.locs} --input_dates {input.dates} \
-        --output_tab {output.tab}
         """

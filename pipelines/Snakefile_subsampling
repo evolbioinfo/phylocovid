@@ -3,14 +3,6 @@ import os
 # To run locally:
 # snakemake --snakefile Snakefile_subsampling --keep-going --cores 7 --configfile config.yaml --use-singularity --singularity-prefix ~/.singularity --singularity-args "--home ~"
 
-# To run on bioevo:
-# change shakemake activation below if you are not Anna ;)
-# source /local/gensoft2/exe/conda/3.19.0/conda/bin/activate snakemake && module load singularity/3.5.3
-# snakemake --snakefile Snakefile_subsampling --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p bioevo --qos=bioevo -A bioevo -J {params.name}" --jobs 300
-# to run on common:
-# snakemake --snakefile Snakefile_subsampling --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p common --qos=normal -A bioevo -J {params.name} -C avx2" --jobs 300
-
-
 # To visualise the pipeline
 # snakemake --snakefile Snakefile_subsampling --configfile config.yaml --dag | dot -Tsvg > pipeline_subsampling.svg
 
@@ -23,12 +15,11 @@ dates = config["dates"]
 
 N = 5
 SIZE = 2000
-freqs = ['PD', 'genomic']
+freqs = ['phylogenetic']
 
 rule all:
     input:
          expand(os.path.join(folder, '{date}', 'timetrees', 'raxfast_subsampled_{freq}_{i}.lsd2.nwk'), i=range(N), date=dates, freq=freqs),
-         expand(os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'), date=dates),
          expand(os.path.join(folder, '{date}', 'metadata', 'freqs_proportional_country.tab'), date=dates),
 
 
@@ -345,9 +336,9 @@ rule subsample_proportional:
         dates = os.path.join(folder, '{date}', 'metadata', 'lsd2.dates'),
         stats = os.path.join(folder, 'confirmed_cases.csv'),
     output:
-        ids = expand(os.path.join(folder, '{{date}}', 'metadata', 'subsampled_PD_{i}.ids'), i=range(N)),
-        stats = os.path.join(folder, '{date}', 'metadata', 'sampling_PD.tab'),
-        stats_per_time = os.path.join(folder, '{date}', 'metadata', 'sampling_PD_per_time.tab'),
+        ids = expand(os.path.join(folder, '{{date}}', 'metadata', 'subsampled_phylogenetic_{i}.ids'), i=range(N)),
+        stats = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic.tab'),
+        stats_per_time = os.path.join(folder, '{date}', 'metadata', 'sampling_phylogenetic_per_time.tab'),
     params:
         mem = 2000,
         name = 'subsample_{date}',
@@ -360,37 +351,8 @@ rule subsample_proportional:
         --input_locs {input.locs} --input_dates {input.dates}  --input_stats {input.stats} \
         --date {wildcards.date} \
         --output_stats {output.stats} --output_stats_per_time {output.stats_per_time} \
-        --output_ids {output.ids}
-        # --size {SIZE}
+        --output_ids {output.ids} --size {SIZE}
         """
-
-rule subsampling_stats:
-    '''
-    Calculates subsampling statistics.
-    '''
-    input:
-        tree = os.path.join(folder, '{date}', 'phylogenies', 'rooted_raxfast.duplicated.has_dates.collapsed.zscore.no_outliers.nwk'),
-        locs = os.path.join(folder, '{date}', 'metadata', 'locations.tab'),
-        stats = os.path.join(folder, 'confirmed_cases.csv'),
-        ids_phy = os.path.join(folder, '{date}', 'metadata', 'subsampled_PD_0.ids'),
-        ids_gen =  os.path.join(folder, '{date}', 'metadata', 'subsampled_genomic_0.ids'),
-    output:
-        stats = os.path.join(folder, '{date}', 'metadata', 'subsampling_country.tab'),
-    params:
-        mem = 2000,
-        name = 'subsample_{date}',
-        qos = 'fast'
-    threads: 1
-    singularity: "docker://evolbioinfo/pastml:v1.9.29.2"
-    shell:
-        """
-        python3 py/subsampling_stats.py --input_tree {input.tree} \
-        --input_locs {input.locs} --input_stats {input.stats} \
-        --date {wildcards.date} \
-        --ids_phylogenetic {input.ids_phy} --ids_genomic {input.ids_gen} \
-        --output_stats {output.stats}
-        """
-
 
 rule freqs_proportional:
     '''

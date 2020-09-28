@@ -3,38 +3,18 @@ import os
 # To run locally:
 # snakemake --snakefile Snakefile_dating --keep-going --cores 7 --configfile config.yaml --use-singularity --singularity-prefix ~/.singularity --singularity-args "--home ~"
 
-# To run on bioevo:
-# change shakemake activation below if you are not Anna ;)
-# source /local/gensoft2/exe/conda/3.19.0/conda/bin/activate snakemake && module load singularity/3.5.3
-# snakemake --snakefile Snakefile_dating --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p bioevo --qos=bioevo -A bioevo -J {params.name}" --jobs 300
-# to run on common:
-# snakemake --snakefile Snakefile_dating --configfile config_tars.yaml --keep-going --cores 1 --use-singularity --singularity-prefix $HOME/.singularity --singularity-args "-B /pasteur" --cluster "sbatch -c {threads} -o logs/{params.name}.log -e logs/{params.name}.log --mem {params.mem} -p common,dedicated --qos=fast -A bioevo -J {params.name} -C avx2" --jobs 300
-
-
 # To visualise the pipeline
 # snakemake --snakefile Snakefile_dating --configfile config.yaml --dag | dot -Tsvg > pipeline_dating.svg
 
 
-localrules: all, upload_to_itol
-
-N=5
+localrules: all
 
 folder = os.path.abspath(config["folder"])
 dates = config["dates"]
 
-# Input tree:
-#   * pruned tips without dates
-#   * rooted on the extremity (dist=0 from MRCA) of the branch separating the MRCA of the sequences from [Li et al. (2020). Similarities and Evolutionary Relationships of COVID-19 and Related Viruses. http://arxiv.org/abs/2003.05580]
-#   * collapsed branches <= 1/2 mut/site (for external ones like that, set to zero)
-# LSD2:
-#   * allow to set any branch to zero: -u 0
-#   * no variance
-#   * -m 33% of tips
-
-
 rule all:
     input:
-        expand(os.path.join(folder, '{date}', 'timetrees', 'raxfast.lsd2.itol'), date=dates),
+        expand(os.path.join(folder, '{date}', 'timetrees', 'raxfast.lsd2.nwk'), date=dates),
 
 
 rule tree_size:
@@ -127,25 +107,3 @@ rule date_lsd2:
         | sed -e 's/ \\[[0-9\\.e+-]\\+; [0-9\\.e+-]\\+\\], objective function [0-9\\.e+-]\\+//g'` > {output.rd}
         """
 
-
-rule upload_to_itol:
-    '''
-    Uploads a tree to iTOL.
-    '''
-    input:
-        tree = os.path.join(folder, '{date}', '{type}', '{tree}.nwk'),
-    output:
-        log = os.path.join(folder, '{date}', '{type}', '{tree}.itol'),
-    singularity:
-        "docker://evolbioinfo/gotree:v0.3.0b"
-    params:
-        mem = 2000,
-        name = 'itol_{tree}_{date}',
-        qos = 'fast',
-        tree_name = '{date}_{type}_{tree}'
-    threads: 1
-    shell:
-        """
-        gotree upload itol -i {input.tree} --project phylocovid --user-id ZxuhG2okfKLQnsgd5xAEGQ \
-        --name "{params.tree_name}" > {output.log}
-        """
