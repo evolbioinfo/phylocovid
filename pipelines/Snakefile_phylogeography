@@ -18,8 +18,8 @@ freqs = ['phylogenetic']
 rule all:
     input:
         expand(os.path.join(folder, '{date}', 'acr', 'map.country.html'), date=dates),
+        expand(os.path.join(folder, '{date}', 'acr', '{type}.country.raxfast.lsd2.html'), date=dates, freq=freqs, i=range(N), type=['compressed']),
         expand(os.path.join(folder, '{date}', 'acr', '{type}.country.raxfast_subsampled_{freq}_{i}.lsd2.html'), date=dates, freq=freqs, i=range(N), type=['compressed', 'full']),
-        expand(os.path.join(folder, '{date}', 'metadata', 'pastml_country.tab'), date=dates)
 
 
 rule pastml_col:
