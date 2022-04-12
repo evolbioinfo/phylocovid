@@ -3,6 +3,11 @@
 The analysis performs phylogenetic tree reconstruction, dating and phylogeographic analysis (with sampling bias correction)
 for the SARS-COV-2 sequences available on [GISAID](https://www.gisaid.org) on April 28, 2020.
 
+## Article
+
+Anna Zhukova; Luc Blassel; Frédéric Lemoine; Marie Morel; Jakub Voznica; Olivier Gascuel. Origin, evolution and global spread of SARS-CoV-2. Comptes Rendus. Biologies, Volume 344 (2021) no. 1, pp. 57-75. [doi:10.5802/crbiol.29](https://comptes-rendus.academie-sciences.fr/biologies/articles/10.5802/crbiol.29/)
+
+
 ## Data
 The analysis was performed with the sequences and metadata that were available on [GISAID](https://www.gisaid.org) on April 28, 2020. 
 To get the sequences please refer to [GISAID](https://www.gisaid.org), 
